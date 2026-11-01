@@ -9,7 +9,7 @@ node_modules/
 *.crt
 kubeconfig*
 *.kubeconfig
-doppler.yaml
+/doppler.yaml
 .doppler/
 secrets/
 
