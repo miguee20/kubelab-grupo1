@@ -125,4 +125,6 @@ kubectl -n inventory delete $(kubectl -n inventory get pod -l app=api -o name | 
 kubectl -n inventory get pods -l app=api -w
 ```
 
+![API pod deleted: 15 of 15 requests answered 200, replacement pod running after 20 s](evidence/05-pod-deletion.png)
+
 Deleting one API or web pod leaves the other replica serving traffic, and the Deployment recreates the deleted pod. Deleting `postgres-0` or the Grafana, Loki or Prometheus pods recreates them with the same PVC, so no data is lost (PER-02).
