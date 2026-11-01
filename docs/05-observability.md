@@ -100,6 +100,24 @@ Expected result:
 - When the test stops, it scales back to 2 after the stabilization window.
 - The dashboard shows the replicas and requests per second climbing at the same moment.
 
+### Result (1 Nov 2026)
+
+| Metric | Value |
+|---|---|
+| HPA CPU target at peak | 341 % of requests (target 60 %) |
+| API replicas | 2 → 6 (maximum), spread over k3s-w1, w2 and w3 |
+| Requests served | 122 266 in 5 m 30 s (about 370 req/s average, 555 req/s peak) |
+| Failed requests | 0.00 % (threshold < 5 %) |
+| Latency p95 | 20.28 ms (threshold < 2 s) |
+
+No request failed while the new pods were added, because the readiness probe keeps a pod out of the Service until it can reach the database.
+
+![HPA at 341 % / 60 % with 6 API replicas on three workers](evidence/05-hpa-scale-out.png)
+
+![Grafana during the test: replicas and HPA desired go to 6, requests per second climb](evidence/05-grafana-load-test.png)
+
+![k6 summary: both thresholds passed, 0 % failed requests](evidence/05-k6-summary.png)
+
 ## Pod deletion test (rubric: continuous service)
 
 ```bash
