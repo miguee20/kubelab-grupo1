@@ -1,7 +1,8 @@
 # Argo CD installed from the upstream stable manifest, trimmed for a 6 GB host:
 # - Dex, notifications and ApplicationSet controllers are removed (not used)
 # - server runs in insecure mode because TLS is not used inside the lab (Traefik serves HTTP)
-# - every component gets memory requests/limits
+# - every component gets memory requests/limits; repo-server and controller get 512Mi because
+#   rendering the Grafana/Loki/Prometheus charts (large Helm repo indexes) needs it
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: argocd
@@ -43,12 +44,12 @@ patches:
     patch: |-
       - op: add
         path: /spec/template/spec/containers/0/resources
-        value: {requests: {cpu: 100m, memory: 192Mi}, limits: {memory: 384Mi}}
+        value: {requests: {cpu: 100m, memory: 192Mi}, limits: {memory: 512Mi}}
   - target: {kind: Deployment, name: argocd-repo-server}
     patch: |-
       - op: add
         path: /spec/template/spec/containers/0/resources
-        value: {requests: {cpu: 50m, memory: 96Mi}, limits: {memory: 256Mi}}
+        value: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 512Mi}}
   - target: {kind: Deployment, name: argocd-server}
     patch: |-
       - op: add
