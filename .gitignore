@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Secretos: NUNCA se suben
+.env
+.env.*
+*.pem
+*.key
+*.crt
+kubeconfig*
+*.kubeconfig
+doppler.yaml
+.doppler/
+secrets/
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

@@ -1,0 +1,7 @@
+# Forzar finales de línea LF (evita que Windows rompa scripts y YAML)
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.gif binary
+*.mp4 binary
