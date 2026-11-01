@@ -32,6 +32,11 @@ spec:
           resources:
             requests: {cpu: 20m, memory: 16Mi}
             limits: {cpu: 200m, memory: 64Mi}
+          # Keep serving for a few seconds after the pod is marked for deletion, while Traefik
+          # removes it from its endpoints; without this a rollout returns some 502 responses
+          lifecycle:
+            preStop:
+              exec: {command: [sleep, "8"]}
           readinessProbe:
             httpGet: {path: /healthz, port: http}
             initialDelaySeconds: 3
