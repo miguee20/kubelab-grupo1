@@ -26,7 +26,7 @@ for IP in "${WORKERS[@]}"; do
   echo "   -> $IP"
   $SSH kube@$IP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_CHANNEL=$CHANNEL \
     K3S_URL=https://$CP:6443 K3S_TOKEN=$TOKEN sh -s - agent \
-    --node-ip $IP --node-label node-role.kubernetes.io/worker=true \
+    --node-ip $IP \
     --kubelet-arg=system-reserved=memory=96Mi --kubelet-arg='eviction-hard=memory.available<64Mi'"
 done
 
@@ -47,6 +47,8 @@ for i in $(seq 1 30); do
   [ "$READY" -eq 4 ] && break
   sleep 5
 done
+# El rol worker se asigna desde el API: el kubelet no puede ponerse etiquetas node-role.* a sí mismo
+for N in k3s-w1 k3s-w2 k3s-w3; do kubectl label node $N node-role.kubernetes.io/worker=true --overwrite >/dev/null; done
 kubectl get nodes -o wide
 echo
 kubectl describe node k3s-cp | grep -A1 Taints
