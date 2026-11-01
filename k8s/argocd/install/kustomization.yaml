@@ -40,6 +40,8 @@ patches:
         controller.status.processors: "5"
         controller.operation.processors: "3"
         reposerver.parallelism.limit: "1"
+        # Large Helm repository indexes (prometheus-community, grafana) take minutes to fetch and render here
+        controller.repo.server.timeout.seconds: "300"
   - target: {kind: StatefulSet, name: argocd-application-controller}
     patch: |-
       - op: add
@@ -83,3 +85,9 @@ patches:
                 preference:
                   matchExpressions:
                     - {key: kubernetes.io/hostname, operator: In, values: [k3s-w2]}
+  # helm/kustomize commands inside the repo-server may run up to 5 minutes (default 90 s)
+  - target: {kind: Deployment, name: argocd-repo-server}
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value: {name: ARGOCD_EXEC_TIMEOUT, value: "5m"}
