@@ -42,7 +42,7 @@ for ID in 104 103 102 101; do
   sleep 45   # give the kubelet time to report the restart before polling
   STATUS=""
   for i in $(seq 1 60); do
-    STATUS=$(kubectl get node ${NAME[$ID]} --no-headers 2>/dev/null | awk '{print $2}')
+    STATUS=$(kubectl get node ${NAME[$ID]} --no-headers 2>/dev/null | awk '{print $2}' || true)
     [ "$STATUS" = "Ready" ] && break
     sleep 6
   done
@@ -50,6 +50,6 @@ for ID in 104 103 102 101; do
 done
 
 echo
-kubectl get nodes
+kubectl get nodes || true
 $SSH kube@$CP 'echo "k3s-cp:"; free -m' || true
 echo "pve host:"; free -m
