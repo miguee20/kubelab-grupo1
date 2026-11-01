@@ -20,6 +20,15 @@ spec:
         resources:
           requests: {cpu: 20m, memory: 32Mi}
           limits: {memory: 96Mi}
+        # Lenient probes: on a busy HDD the kubelet answers slowly and the default probes restart the pod
+        livenessProbe:
+          initialDelaySeconds: 30
+          timeoutSeconds: 15
+          failureThreshold: 6
+        readinessProbe:
+          initialDelaySeconds: 30
+          timeoutSeconds: 15
+          failureThreshold: 6
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
