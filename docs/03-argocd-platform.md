@@ -46,6 +46,8 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 
 `nfs-subdir-external-provisioner` creates one folder per PVC in `/srv/nfs/k8s` on the Proxmox host (exported only to `10.10.10.0/24`). The `nfs` StorageClass is the cluster default (PER-01). Since the data lives outside the worker VMs, a pod can be deleted or rescheduled to any worker and still find its volume (PER-02).
 
+The export uses `async`. With `sync`, every `fsync` from SQLite (Grafana), PostgreSQL, Prometheus and Loki waited for the single HDD. Grafana's first start (about 200 migrations) then took longer than its liveness probe and the worker stalled on I/O. The trade-off is that a power loss on the host could drop the last few seconds of writes, which is acceptable for a lab.
+
 ## Verification
 
 ```bash
