@@ -50,8 +50,10 @@ check "APP-03/PER-03 PostgreSQL StatefulSet ready" \
   "[ \"\$(kubectl -n inventory get sts postgres -o jsonpath='{.status.readyReplicas}')\" = 1 ]"
 [ "$(http api /health)" = 200 ] && ok "APP-01 api.$DOMAIN/health" || bad "APP-01 api.$DOMAIN/health"
 [ "$(http api /products)" = 200 ] && ok "APP-01 api.$DOMAIN/products (CRUD list)" || bad "APP-01 api.$DOMAIN/products"
-check "APP-01 api.$DOMAIN/metrics exposes http_requests_total" \
-  "curl -s -m 10 -H 'Host: api.$DOMAIN' http://$LB/metrics | grep -q '^http_requests_total'"
+# Read the whole body first: with pipefail, `curl | grep -q` fails when grep exits early (SIGPIPE)
+METRICS=$(curl -s -m 10 -H "Host: api.$DOMAIN" "http://$LB/metrics")
+echo "$METRICS" | grep -q '^http_requests_total' \
+  && ok "APP-01 api.$DOMAIN/metrics exposes http_requests_total" || bad "APP-01 api.$DOMAIN/metrics"
 [ "$(http app /)" = 200 ] && ok "APP-02 app.$DOMAIN" || bad "APP-02 app.$DOMAIN"
 check "NET-04 db.$DOMAIN:5432 accepts TCP" "timeout 5 bash -c '</dev/tcp/$LB/5432'"
 
@@ -66,7 +68,9 @@ check "HA-05 load test script in the repository" \
 section "Persistence (PER)"
 check "PER-01 default StorageClass is nfs" \
   "kubectl get sc nfs -o jsonpath='{.metadata.annotations.storageclass\.kubernetes\.io/is-default-class}' | grep -q true"
-PVC=$(kubectl get pvc -A --no-headers -o custom-columns=NS:.metadata.namespace,N:.metadata.name,S:.status.phase,SC:.spec.storageClassName)
+# The provisioner's own PVC is a static binding to the NFS export (no StorageClass), so it is skipped
+PVC=$(kubectl get pvc -A --no-headers -o custom-columns=NS:.metadata.namespace,N:.metadata.name,S:.status.phase,SC:.spec.storageClassName \
+  | grep -v '^nfs-provisioner ')
 echo "$PVC" | awk '$3!="Bound"||$4!="nfs"{f=1; print "    "$0} END{exit f}' \
   && ok "PER-02 $(echo "$PVC" | wc -l) PVCs Bound on nfs ($(echo "$PVC" | awk '{print $2}' | xargs))" || bad "PER-02 PVC problem"
 
