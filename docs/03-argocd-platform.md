@@ -26,6 +26,21 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 
 [`05-bootstrap-argocd.sh`](../scripts/proxmox/05-bootstrap-argocd.sh) installs Argo CD from [`k8s/argocd/install`](../k8s/argocd/install/kustomization.yaml) and creates the root Application. After that, nothing is applied by hand.
 
+## Argo CD accounts (ACC-03)
+
+| Account | Role | Password (Doppler) |
+|---|---|---|
+| `admin` | Full access | `ARGOCD_ADMIN_PASSWORD` |
+| `docente` | `role:readonly`: sees every Application, cannot sync, edit or delete | `ARGOCD_VIEWER_PASSWORD` |
+
+The account and its RBAC rule are declared in [`k8s/argocd/install`](../k8s/argocd/install/kustomization.yaml) (`argocd-cm` and `argocd-rbac-cm`). Argo CD stores only bcrypt hashes in `argocd-secret`, so the passwords are applied with one script. Doppler syncs both values into `argocd/argocd-users`, and [`06-argocd-users.sh`](../scripts/proxmox/06-argocd-users.sh) hashes them and writes the hashes:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/06-argocd-users.sh -o 06.sh && bash 06.sh
+```
+
+The script also deletes `argocd-initial-admin-secret`, so the random first password stops existing.
+
 ## Argo CD trimmed for 6 GB
 
 | Change | Saving |
