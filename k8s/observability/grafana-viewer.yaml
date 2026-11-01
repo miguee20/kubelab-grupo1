@@ -1,6 +1,7 @@
 # Read-only Grafana user for the instructor (ACC-03). Runs after every sync of this Application;
-# login and password come from Doppler (grafana-secrets). New users get the Viewer role
-# (grafana.ini users.auto_assign_org_role = Viewer).
+# login and password come from Doppler (grafana-secrets). The Job sets the Viewer role and
+# View permission on the KubeLab dashboard folder explicitly, so the instructor sees the
+# dashboard but cannot edit it.
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -23,7 +24,10 @@ spec:
             - |
               set -e
               G=http://grafana.monitoring.svc.cluster.local
+              api() { curl -sf -u "$ADMIN_USER:$ADMIN_PASSWORD" -H 'Content-Type: application/json' "$@"; }
               until curl -sf "$G/api/health" >/dev/null; do echo "waiting for grafana"; sleep 5; done
+
+              # 1. Create the user (or keep the existing one)
               BODY=$(printf '{"name":"Instructor","login":"%s","password":"%s"}' "$VIEWER_USER" "$VIEWER_PASSWORD")
               CODE=$(curl -s -o /tmp/out -w '%{http_code}' -u "$ADMIN_USER:$ADMIN_PASSWORD" \
                 -H 'Content-Type: application/json' -X POST "$G/api/admin/users" -d "$BODY")
@@ -32,6 +36,21 @@ spec:
                 412|409) echo "viewer user already exists" ;;
                 *) echo "unexpected response $CODE"; cat /tmp/out; exit 1 ;;
               esac
+              ID=$(api "$G/api/users/lookup?loginOrEmail=$VIEWER_USER" | sed -n 's/^{"id":\([0-9]*\).*/\1/p')
+              [ -n "$ID" ] || { echo "user id not found"; exit 1; }
+
+              # 2. Viewer role in the main organization (explicit, not left to auto-assign)
+              api -X PATCH "$G/api/orgs/1/users/$ID" -d '{"role":"Viewer"}' >/dev/null \
+                || api -X POST "$G/api/orgs/1/users" -d "{\"loginOrEmail\":\"$VIEWER_USER\",\"role\":\"Viewer\"}" >/dev/null
+              echo "role Viewer set for user $ID"
+
+              # 3. View permission on the provisioned KubeLab folder, for the Viewer role and the user
+              until FOLDER=$(api "$G/api/search?type=dash-folder&query=KubeLab" | sed -n 's/.*"uid":"\([^"]*\)".*/\1/p') && [ -n "$FOLDER" ]; do
+                echo "waiting for the KubeLab folder"; sleep 5
+              done
+              api -X POST "$G/api/access-control/folders/$FOLDER/builtInRoles/Viewer" -d '{"permission":"View"}' >/dev/null
+              api -X POST "$G/api/access-control/folders/$FOLDER/users/$ID" -d '{"permission":"View"}' >/dev/null
+              echo "View permission on folder $FOLDER"
           env:
             - name: VIEWER_USER
               valueFrom: {secretKeyRef: {name: grafana-secrets, key: DB_READONLY_USER}}
