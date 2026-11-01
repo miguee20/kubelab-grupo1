@@ -47,12 +47,28 @@ If the adapters have other names (`Wi-Fi 2`, `Ethernet 3`), the script lists the
    - IP `192.168.137.10/24`, gateway `192.168.137.1`, DNS `1.1.1.1`
 4. Web UI at `https://192.168.137.10:8006` (user `root`, realm Linux PAM).
 
-## 2. Host preparation
+## 2. Repository on the host
 
-In the `pve` shell:
+The repository is private. The `pve` host clones it with `GH_PAT`, which it reads from Doppler using the Doppler service token. That token is the only credential typed by hand (SEC-04); it is kept in `/root/.doppler-token` (mode 600, root only), and no GitHub token is written to disk.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/01-host-setup.sh -o 01.sh && bash 01.sh
+apt-get install -y -qq git
+read -rsp "Doppler service token (kubelab/prd): " T; echo
+install -m 600 /dev/null /root/.doppler-token && printf '%s' "$T" > /root/.doppler-token && unset T
+PAT=$(curl -fsS -u "$(cat /root/.doppler-token):" "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["GH_PAT"])')
+git clone "https://x-access-token:${PAT}@github.com/miguee20/kubelab-grupo1.git" /root/kubelab-grupo1 && unset PAT
+cd /root/kubelab-grupo1
+git remote set-url origin https://github.com/miguee20/kubelab-grupo1.git
+git config credential.helper /root/kubelab-grupo1/scripts/proxmox/git-credential-doppler.sh
+```
+
+From then on `git pull` in `/root/kubelab-grupo1` asks Doppler for the token through [`git-credential-doppler.sh`](../scripts/proxmox/git-credential-doppler.sh). Every script below runs from that clone.
+
+## 3. Host preparation
+
+```bash
+bash /root/kubelab-grupo1/scripts/proxmox/01-host-setup.sh
 ```
 
 [`01-host-setup.sh`](../scripts/proxmox/01-host-setup.sh) does the following:
@@ -62,10 +78,10 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 - Exports `/srv/nfs/k8s` over NFS.
 - Installs Tailscale advertising the route `10.10.10.0/24`.
 
-## 3. Cloud-init template and VMs
+## 4. Cloud-init template and VMs
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/02-create-vms.sh -o 02.sh && bash 02.sh
+bash /root/kubelab-grupo1/scripts/proxmox/02-create-vms.sh
 ```
 
 [`02-create-vms.sh`](../scripts/proxmox/02-create-vms.sh) follows these steps:
@@ -86,10 +102,10 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 
 ![Proxmox with the 4 cluster VMs running](evidence/01-proxmox-vms.png)
 
-## 4. Host memory tuning
+## 5. Host memory tuning
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/04-memory-tuning.sh -o 04.sh && bash 04.sh
+bash /root/kubelab-grupo1/scripts/proxmox/04-memory-tuning.sh
 ```
 
 [`04-memory-tuning.sh`](../scripts/proxmox/04-memory-tuning.sh) applies the following:
