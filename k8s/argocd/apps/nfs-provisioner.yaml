@@ -1,0 +1,35 @@
+# Dynamic storage provisioner (PER-01): every PVC becomes a folder in the NFS export
+# /srv/nfs/k8s on the Proxmox host. "nfs" is the default StorageClass, so data
+# survives pod deletion and rescheduling on any worker (PER-02).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nfs-provisioner
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+    chart: nfs-subdir-external-provisioner
+    targetRevision: ">=4.0.0"
+    helm:
+      valuesObject:
+        nfs:
+          server: 10.10.10.1
+          path: /srv/nfs/k8s
+          mountOptions: [nfsvers=4.2]
+        storageClass:
+          name: nfs
+          defaultClass: true
+          reclaimPolicy: Delete
+          archiveOnDelete: true
+          pathPattern: "${.PVC.namespace}-${.PVC.name}"
+        resources:
+          requests: {cpu: 10m, memory: 16Mi}
+          limits: {memory: 64Mi}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nfs-provisioner
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true]
