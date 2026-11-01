@@ -44,7 +44,10 @@ jobs:
       contents: read
       packages: write
     steps:
+      # Do not keep the read-only GITHUB_TOKEN in git config: the manifest commit is pushed with GH_PAT
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       # SEC-03: pipeline credentials come from Doppler (only DOPPLER_TOKEN lives in GitHub)
       - name: Load secrets from Doppler
