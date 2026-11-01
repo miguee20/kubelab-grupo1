@@ -27,6 +27,13 @@ spec:
         # Only one pod may open the SQLite database on the RWO volume: stop the old pod before starting the new one
         deploymentStrategy:
           type: Recreate
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - {key: kubernetes.io/hostname, operator: In, values: [k3s-w3]}
         # First start runs ~200 SQLite migrations on NFS over an HDD; give it time before liveness kicks in
         livenessProbe:
           httpGet: {path: /api/health, port: 3000}

@@ -19,6 +19,13 @@ spec:
         prometheus-pushgateway:
           enabled: false
         kube-state-metrics:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  preference:
+                    matchExpressions:
+                      - {key: kubernetes.io/hostname, operator: In, values: [k3s-w1]}
           resources:
             requests: {cpu: 10m, memory: 32Mi}
             limits: {memory: 96Mi}
@@ -43,6 +50,16 @@ spec:
           resources:
             requests: {cpu: 50m, memory: 192Mi}
             limits: {memory: 448Mi}
+          # Heavy pods are spread one group per worker (w1: Prometheus, w2: Argo CD + PostgreSQL, w3: Loki + Grafana)
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  preference:
+                    matchExpressions:
+                      - {key: kubernetes.io/hostname, operator: In, values: [k3s-w1]}
+          strategy:
+            type: Recreate
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
