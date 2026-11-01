@@ -1,0 +1,31 @@
+# Autoscaling 2-6 replicas on CPU (HA-04) and at least one replica during disruptions (HA-03)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api
+  namespace: inventory
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 60}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api
+  namespace: inventory
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: api}
