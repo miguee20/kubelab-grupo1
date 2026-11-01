@@ -41,6 +41,8 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 
 The script also deletes `argocd-initial-admin-secret`, so the random first password stops existing.
 
+![docente sees every Application, but Sync is rejected with "permission denied"](evidence/03-argocd-readonly-docente.png)
+
 ## Argo CD trimmed for 6 GB
 
 | Change | Saving |

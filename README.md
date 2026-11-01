@@ -63,7 +63,23 @@ tests/load/          k6 load test for the autoscaling demo
 
 ## Instructor access
 
-> Pending: join Tailscale and copy `docs/hosts.txt`.
+The cluster network `10.10.10.0/24` is reachable only through Tailscale. The Proxmox host `pve-grupo1` is a subnet router for it.
+
+1. **Join the tailnet.** Accept the Tailscale invitation sent by the group, install Tailscale and sign in. On Linux, also run `sudo tailscale up --accept-routes` (Windows and macOS accept routes by default).
+2. **Add the host names.** Append [`docs/hosts.txt`](docs/hosts.txt) to the hosts file:
+   - Windows (Notepad as administrator): `C:\Windows\System32\drivers\etc\hosts`
+   - Linux / macOS: `sudo tee -a /etc/hosts < docs/hosts.txt`
+3. **Check the connection.** `ping 10.10.10.200` should answer, and http://app.grupo1.lab should open.
+
+### Read-only accounts
+
+| Service | User | Permissions |
+|---|---|---|
+| Argo CD | `docente` | `role:readonly`: views Applications, cannot sync, edit or delete |
+| Grafana | `docente` | Viewer: dashboards and Explore, cannot edit |
+| PostgreSQL (`db.grupo1.lab:5432`) | `docente` | `SELECT` only |
+
+The passwords are stored in Doppler and are delivered to the instructor privately. They are never committed to this repository.
 
 ## Rebuilding the environment from scratch
 
