@@ -27,10 +27,10 @@ Business domain: **grocery store inventory** (`products` entity).
 | Node | Role | IP | vCPU | RAM | Disk |
 |---|---|---|---|---|---|
 | pve | Proxmox hypervisor | 192.168.137.10 / 10.10.10.1 | 4 | 6 GB | 1 TB HDD |
-| k3s-cp | Control plane | 10.10.10.11 | 2 | 1536 MB | 20 GB |
-| k3s-w1 | Worker | 10.10.10.12 | 2 | 1152 MB | 30 GB |
-| k3s-w2 | Worker | 10.10.10.13 | 2 | 1152 MB | 30 GB |
-| k3s-w3 | Worker | 10.10.10.14 | 2 | 1152 MB | 30 GB |
+| k3s-cp | Control plane | 10.10.10.11 | 2 | 1408 MB | 20 GB |
+| k3s-w1 | Worker | 10.10.10.12 | 2 | 1408 MB | 30 GB |
+| k3s-w2 | Worker | 10.10.10.13 | 2 | 1408 MB | 30 GB |
+| k3s-w3 | Worker | 10.10.10.14 | 2 | 1408 MB | 30 GB |
 
 MetalLB pool: `10.10.10.200-10.10.10.210`. Traefik: `10.10.10.200`.
 
