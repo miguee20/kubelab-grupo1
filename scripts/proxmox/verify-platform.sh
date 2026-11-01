@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # KubeLab - end-to-end verification of the platform against the course requirements.
-# Run in the pve shell as root. Read-only by default:
-#   bash verify-platform.sh
+# Run in the pve shell as root, from the clone in /root/kubelab-grupo1. Read-only by default:
+#   bash scripts/proxmox/verify-platform.sh
 # With --destructive it also proves self-healing and persistence:
 #   - deletes the web IngressRoute and waits for Argo CD to recreate it (CD-04)
 #   - deletes postgres-0 and checks that the products are still there (PER-02, PER-03)
@@ -62,8 +62,10 @@ HPA=$(kubectl -n inventory get hpa --no-headers -o custom-columns=N:.metadata.na
 echo "$HPA" | awk '$2!=2||$3!=6{f=1} END{exit f||NR<2}' && ok "HA-04 HPA 2-6 for api and web" || bad "HA-04 HPA: $HPA"
 check "HA-04 metrics-server answers (kubectl top)" "kubectl top nodes"
 [ "$(kubectl -n inventory get pdb --no-headers | wc -l)" -ge 2 ] && ok "HA-03 PodDisruptionBudgets for api and web" || bad "HA-03 PDBs missing"
-check "HA-05 load test script in the repository" \
-  "curl -sfI https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/tests/load/k6-api.js"
+REPO_DIR=$(cd "$(dirname "$0")/../.." && pwd)
+check "HA-05 load test script in the repository" "[ -f '$REPO_DIR/tests/load/k6-api.js' ]"
+check "CD-02 Argo CD repository credentials (argocd/argocd-repo)" \
+  "kubectl -n argocd get secret argocd-repo -o jsonpath='{.metadata.labels.argocd\\.argoproj\\.io/secret-type}' | grep -q repository"
 
 section "Persistence (PER)"
 check "PER-01 default StorageClass is nfs" \

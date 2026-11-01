@@ -21,10 +21,12 @@ Every Application has `automated` sync with `prune: true` and `selfHeal: true` (
 In the `pve` shell:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/05-bootstrap-argocd.sh -o 05.sh && bash 05.sh
+bash /root/kubelab-grupo1/scripts/proxmox/05-bootstrap-argocd.sh
 ```
 
 [`05-bootstrap-argocd.sh`](../scripts/proxmox/05-bootstrap-argocd.sh) installs Argo CD from [`k8s/argocd/install`](../k8s/argocd/install/kustomization.yaml) and creates the root Application. After that, nothing is applied by hand.
+
+Because the repository is private, the script first creates, from Doppler, the two Secrets that must exist before Argo CD can read it: the Doppler service token (`doppler-token-secret`) and the repository credentials (`argocd/argocd-repo`, labelled `argocd.argoproj.io/secret-type: repository`). Once the Doppler operator runs, the DopplerSecret `argocd-repo` keeps those credentials in sync with `GH_PAT`.
 
 ## Argo CD accounts (ACC-03)
 
@@ -36,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 The account and its RBAC rule are declared in [`k8s/argocd/install`](../k8s/argocd/install/kustomization.yaml) (`argocd-cm` and `argocd-rbac-cm`). Argo CD stores only bcrypt hashes in `argocd-secret`, so the passwords are applied with one script. Doppler syncs both values into `argocd/argocd-users`, and [`06-argocd-users.sh`](../scripts/proxmox/06-argocd-users.sh) hashes them and writes the hashes:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/06-argocd-users.sh -o 06.sh && bash 06.sh
+bash /root/kubelab-grupo1/scripts/proxmox/06-argocd-users.sh
 ```
 
 The script also deletes `argocd-initial-admin-secret`, so the random first password stops existing.

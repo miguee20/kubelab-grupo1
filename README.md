@@ -65,6 +65,8 @@ tests/load/          k6 load test for the autoscaling demo
 
 ## Instructor access
 
+The repository is private: the instructor is added as a collaborator.
+
 The cluster network `10.10.10.0/24` is reachable only through Tailscale. The Proxmox host `pve-grupo1` is a subnet router for it.
 
 1. **Join the tailnet.** Accept the Tailscale invitation sent by the group, install Tailscale and sign in. On Linux, also run `sudo tailscale up --accept-routes` (Windows and macOS accept routes by default).
@@ -96,7 +98,7 @@ The passwords are stored in Doppler and are delivered to the instructor privatel
 [`scripts/proxmox/verify-platform.sh`](scripts/proxmox/verify-platform.sh) checks every requirement against the running cluster (nodes, Argo CD, domains, HPA, PVCs, Prometheus targets, Loki, Doppler secrets) and prints PASS/FAIL per item. `--destructive` also deletes the web IngressRoute and `postgres-0` to prove self-healing and persistence.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/verify-platform.sh -o verify.sh
-bash verify.sh                 # read-only
-bash verify.sh --destructive   # also self-healing and persistence
+cd /root/kubelab-grupo1 && git pull
+bash scripts/proxmox/verify-platform.sh                 # read-only
+bash scripts/proxmox/verify-platform.sh --destructive   # also self-healing and persistence
 ```
