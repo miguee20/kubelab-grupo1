@@ -1,0 +1,7 @@
+# Grupo 1 - KubeLab
+10.10.10.200 app.grupo1.lab
+10.10.10.200 api.grupo1.lab
+10.10.10.200 db.grupo1.lab
+10.10.10.200 grafana.grupo1.lab
+10.10.10.200 prometheus.grupo1.lab
+10.10.10.200 argocd.grupo1.lab
