@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# KubeLab - Paso 3: instalar k3s en los 4 nodos (se ejecuta en la shell de pve como root)
-# - k3s-cp: servidor (control plane) con taint NoSchedule -> no corre cargas de aplicaciones
-# - k3s-w1..w3: agentes
-# - Se desactivan los add-ons empaquetados (Traefik, ServiceLB, local-storage, metrics-server)
-#   porque MetalLB, Traefik, NFS y metrics-server se instalan con Argo CD desde el repositorio.
+# KubeLab - Step 3: install k3s on the 4 nodes (run in the pve shell as root)
+# - k3s-cp: server (control plane) with a NoSchedule taint -> no application workloads
+# - k3s-w1..w3: agents
+# - Bundled add-ons are disabled (Traefik, ServiceLB, local-storage, metrics-server)
+#   because MetalLB, Traefik, NFS and metrics-server are installed by Argo CD from the repository.
 set -euo pipefail
 
 CP=10.10.10.11
@@ -11,7 +11,7 @@ WORKERS=(10.10.10.12 10.10.10.13 10.10.10.14)
 SSH="ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5"
 CHANNEL=stable
 
-echo "==> 1/4 Servidor k3s en k3s-cp ($CP)"
+echo "==> 1/4 k3s server on k3s-cp ($CP)"
 $SSH kube@$CP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_CHANNEL=$CHANNEL sh -s - server \
   --node-ip $CP --tls-san $CP --tls-san k3s-cp.grupo1.lab \
   --write-kubeconfig-mode 644 \
@@ -21,7 +21,7 @@ $SSH kube@$CP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_CHANNEL=$CHANNEL 
 
 TOKEN=$($SSH kube@$CP "sudo cat /var/lib/rancher/k3s/server/node-token")
 
-echo "==> 2/4 Agentes k3s en los workers"
+echo "==> 2/4 k3s agents on the workers"
 for IP in "${WORKERS[@]}"; do
   echo "   -> $IP"
   $SSH kube@$IP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_CHANNEL=$CHANNEL \
@@ -30,7 +30,7 @@ for IP in "${WORKERS[@]}"; do
     --kubelet-arg=system-reserved=memory=96Mi --kubelet-arg='eviction-hard=memory.available<64Mi'"
 done
 
-echo "==> 3/4 kubectl en el host pve"
+echo "==> 3/4 kubectl on the pve host"
 if ! command -v kubectl >/dev/null; then
   KVER=$($SSH kube@$CP "k3s --version | head -1 | awk '{print \$3}' | cut -d+ -f1")
   curl -fsSL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${KVER}/bin/linux/amd64/kubectl"
@@ -41,13 +41,13 @@ $SSH kube@$CP "cat /etc/rancher/k3s/k3s.yaml" | sed "s/127.0.0.1/$CP/" > /root/.
 chmod 600 /root/.kube/config
 grep -q 'source <(kubectl completion bash)' /root/.bashrc || echo 'source <(kubectl completion bash); alias k=kubectl; complete -F __start_kubectl k' >> /root/.bashrc
 
-echo "==> 4/4 Esperando nodos Ready..."
+echo "==> 4/4 Waiting for nodes to be Ready..."
 for i in $(seq 1 30); do
   READY=$(kubectl get nodes --no-headers 2>/dev/null | awk '$2=="Ready"' | wc -l)
   [ "$READY" -eq 4 ] && break
   sleep 5
 done
-# El rol worker se asigna desde el API: el kubelet no puede ponerse etiquetas node-role.* a sí mismo
+# The worker role is set through the API: the kubelet cannot self-assign node-role.* labels
 for N in k3s-w1 k3s-w2 k3s-w3; do kubectl label node $N node-role.kubernetes.io/worker=true --overwrite >/dev/null; done
 kubectl get nodes -o wide
 echo

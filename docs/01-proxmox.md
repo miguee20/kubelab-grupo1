@@ -1,84 +1,96 @@
-# 01 · Instalación de Proxmox VE y creación de las VMs
+# 01 · Proxmox VE installation and VM creation
 
 ## Hardware
 
-| Componente | Valor |
+| Component | Value |
 |---|---|
-| Equipo | Dell Vostro (escritorio) |
-| CPU | Intel Core i5-3470S, 4 núcleos, VT-x habilitado |
+| Machine | Dell Vostro desktop |
+| CPU | Intel Core i5-3470S, 4 cores, VT-x enabled |
 | RAM | 6 GB DDR3 |
-| Disco | HDD 1 TB |
-| Red | 1 NIC Ethernet (`nic0`), 1 WiFi (`wlp3s0`, sin usar) |
+| Disk | 1 TB HDD |
+| Network | 1 Ethernet NIC (`nic0`), 1 Wi-Fi card (`wlp3s0`, unused) |
 
-## Topología de red
+## Network topology
 
 ```
- Internet ── WiFi laptop (Windows 11, Conexión compartida a Internet)
-                 │ cable Ethernet · 192.168.137.0/24 (siempre igual: casa y universidad)
-         vmbr0 ─ pve 192.168.137.10 ── Tailscale (subnet router 10.10.10.0/24)
+ Internet ── laptop Wi-Fi (Windows 11 Internet Connection Sharing)
+                 │ Ethernet cable · 192.168.137.0/24 (same at home and at university)
+         vmbr0 ─ pve 192.168.137.10 ── Tailscale (subnet router for 10.10.10.0/24)
                  │ NAT (iptables MASQUERADE)
-         vmbr1 ─ 10.10.10.0/24  red interna fija, sin puerto físico
-                 ├─ 10.10.10.1        host pve (gateway + NFS)
+         vmbr1 ─ 10.10.10.0/24  fixed internal network, no physical port
+                 ├─ 10.10.10.1        pve host (gateway + NFS)
                  ├─ 10.10.10.11       k3s-cp
                  ├─ 10.10.10.12-14    k3s-w1..w3
-                 └─ 10.10.10.200-210  pool MetalLB (Traefik = .200)
+                 └─ 10.10.10.200-210  MetalLB pool (Traefik = .200)
 ```
 
-Como el clúster vive en `vmbr1`, ninguna IP interna cambia aunque cambie la red por la que la laptop sale a internet.
+Since the cluster lives on `vmbr1`, no internal IP changes when the laptop's internet connection changes.
 
-## 1. Instalación de Proxmox VE 9.2
+## 1. Installing Proxmox VE 9.2
 
-1. ISO de Proxmox VE 9.2 grabada en USB con Rufus en **modo DD**.
-2. Laptop conectada a la Dell por cable, con *Conexión compartida a Internet* del WiFi hacia Ethernet.
-3. Instalador gráfico con estas opciones:
-   - Disco: HDD 1 TB, **ext4** (no ZFS, para no consumir RAM en caché ARC)
-   - Zona horaria: America/Guatemala
+1. Proxmox VE 9.2 ISO written to a USB drive with Rufus in **DD mode**.
+2. Laptop connected to the Dell by cable, sharing its Wi-Fi to the Ethernet adapter (Internet Connection Sharing).
+3. Graphical installer options:
+   - Disk: 1 TB HDD, **ext4** (not ZFS, to avoid spending RAM on the ARC cache)
+   - Time zone: America/Guatemala
    - Hostname: `pve.grupo1.lab`
-   - IP: `192.168.137.10/24`, gateway `192.168.137.1`, DNS `1.1.1.1`
-4. Acceso web en `https://192.168.137.10:8006` (usuario `root`, realm Linux PAM).
+   - IP `192.168.137.10/24`, gateway `192.168.137.1`, DNS `1.1.1.1`
+4. Web UI at `https://192.168.137.10:8006` (user `root`, realm Linux PAM).
 
-## 2. Preparación del host
+## 2. Host preparation
 
-En la shell de `pve`:
+In the `pve` shell:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/01-host-setup.sh -o 01.sh && bash 01.sh
 ```
 
-El script [`01-host-setup.sh`](../scripts/proxmox/01-host-setup.sh) hace lo siguiente:
-- Configura los repositorios sin suscripción.
-- Crea `vmbr1` con NAT.
-- Ajusta memoria: KSM, swappiness 10 y servicios HA apagados.
-- Instala el servidor NFS en `/srv/nfs/k8s`.
-- Instala Tailscale anunciando la ruta `10.10.10.0/24`.
+[`01-host-setup.sh`](../scripts/proxmox/01-host-setup.sh) does the following:
+- Configures the no-subscription repositories.
+- Creates `vmbr1` with NAT.
+- Tunes memory: KSM, swappiness 10, HA services disabled.
+- Exports `/srv/nfs/k8s` over NFS.
+- Installs Tailscale advertising the route `10.10.10.0/24`.
 
-## 3. Plantilla cloud-init y VMs
+## 3. Cloud-init template and VMs
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/02-create-vms.sh -o 02.sh && bash 02.sh
 ```
 
-El script [`02-create-vms.sh`](../scripts/proxmox/02-create-vms.sh) sigue estos pasos:
-1. Descarga la imagen oficial `debian-13-generic-amd64.qcow2`.
-2. Crea la plantilla `9000` con estas características:
-   - CPU `host`, disco virtio-scsi con discard
-   - Agente QEMU, consola serial
-   - Cloud-init con usuario `kube` y llave SSH del host
-   - Snippet `kubelab-vendor.yaml`: qemu-guest-agent, nfs-common, zram y zona horaria
-3. Clona las 4 VMs y les asigna IP fija, memoria, tamaño de disco y orden de arranque.
+[`02-create-vms.sh`](../scripts/proxmox/02-create-vms.sh) follows these steps:
+1. Downloads the official `debian-13-generic-amd64.qcow2` image.
+2. Builds template `9000` with:
+   - `host` CPU type, virtio-scsi disk with discard
+   - QEMU guest agent, serial console
+   - Cloud-init with user `kube` and the host's SSH key
+   - Vendor snippet `kubelab-vendor.yaml`: qemu-guest-agent, nfs-common, zram and time zone
+3. Clones the 4 VMs and sets their static IP, memory, disk size and boot order.
 
-| VMID | Nodo | IP | vCPU | RAM | Disco |
+| VMID | Node | IP | vCPU | RAM | Disk |
 |---|---|---|---|---|---|
 | 101 | k3s-cp | 10.10.10.11 | 2 | 1024 MB | 20 GB |
 | 102 | k3s-w1 | 10.10.10.12 | 2 | 1152 MB | 30 GB |
 | 103 | k3s-w2 | 10.10.10.13 | 2 | 1152 MB | 30 GB |
 | 104 | k3s-w3 | 10.10.10.14 | 2 | 1152 MB | 30 GB |
 
-### Presupuesto de memoria (6 GB)
+![Proxmox with the 4 cluster VMs running](evidence/01-proxmox-vms.png)
 
-| Consumidor | RAM |
+## 4. Host memory tuning
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/04-memory-tuning.sh -o 04.sh && bash 04.sh
+```
+
+[`04-memory-tuning.sh`](../scripts/proxmox/04-memory-tuning.sh) applies the following:
+- Adds zram swap on the host (compressed in RAM, used before the HDD swap).
+- Enables the virtio-balloon device on every VM. With free page reporting, memory the guests free is returned to the host.
+
+### Memory budget (6 GB)
+
+| Consumer | RAM |
 |---|---|
-| Host Proxmox (pveproxy, pvedaemon, NFS, Tailscale) | ~1.3 GB |
-| VMs (fijo, sin ballooning) | 4.4 GB |
-| Ahorro por KSM (páginas idénticas entre las 4 VMs Debian) | ~0.3–0.6 GB |
-| zram dentro de cada VM (swap comprimido en RAM) | +60 % efectivo |
+| Proxmox host (pveproxy, pvedaemon, NFS, Tailscale) | ~1.3 GB |
+| VMs (fixed size) | 4.4 GB |
+| KSM savings (identical pages across the 4 Debian VMs) | ~0.3–0.6 GB |
+| zram on the host and inside each VM | compressed swap in RAM, before the HDD |

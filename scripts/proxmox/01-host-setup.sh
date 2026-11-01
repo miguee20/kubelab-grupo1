@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# KubeLab - Paso 1: preparar el host Proxmox (se ejecuta UNA vez en la shell de pve como root)
-# - Repos sin suscripción
-# - Red interna fija vmbr1 10.10.10.0/24 con NAT hacia vmbr0 (uplink)
-# - Ajustes de memoria (KSM, swappiness, sin servicios HA)
-# - Servidor NFS para la StorageClass del clúster
-# - Tailscale como subnet router de 10.10.10.0/24
+# KubeLab - Step 1: prepare the Proxmox host (run ONCE in the pve shell as root)
+# - No-subscription repositories
+# - Fixed internal network vmbr1 10.10.10.0/24 with NAT to vmbr0 (uplink)
+# - Memory tuning (KSM, swappiness, HA services disabled)
+# - NFS server for the cluster StorageClass
+# - Tailscale as subnet router for 10.10.10.0/24
 set -euo pipefail
 
-echo "==> 1/6 Repositorios sin suscripción"
+echo "==> 1/6 No-subscription repositories"
 CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
 for f in /etc/apt/sources.list.d/pve-enterprise.sources /etc/apt/sources.list.d/ceph.sources; do
   if [ -f "$f" ] && ! grep -q '^Enabled:' "$f"; then echo "Enabled: false" >> "$f"; fi
@@ -22,11 +22,11 @@ EOF
 apt-get update -qq
 apt-get install -y -qq nfs-kernel-server iptables curl wget >/dev/null
 
-echo "==> 2/6 Red interna vmbr1 (10.10.10.1/24) con NAT"
+echo "==> 2/6 Internal network vmbr1 (10.10.10.1/24) with NAT"
 if ! grep -q 'iface vmbr1' /etc/network/interfaces; then
 cat >> /etc/network/interfaces <<'EOF'
 
-# KubeLab: red interna fija del clúster (no depende del uplink)
+# KubeLab: fixed internal cluster network (independent of the uplink)
 auto vmbr1
 iface vmbr1 inet static
 	address 10.10.10.1/24
@@ -46,16 +46,16 @@ EOF
 sysctl -q --system
 ifreload -a
 
-echo "==> 3/6 Ahorro de memoria"
+echo "==> 3/6 Memory savings"
 systemctl disable --now pve-ha-lrm pve-ha-crm >/dev/null 2>&1 || true
 systemctl enable --now ksmtuned >/dev/null 2>&1 || true
-# KSM empieza a deduplicar antes (cuando queda menos del 40% libre)
+# KSM starts merging earlier (when less than 40% is free)
 if [ -f /etc/ksmtuned.conf ]; then
   sed -i 's/^#\?KSM_THRES_COEF=.*/KSM_THRES_COEF=40/' /etc/ksmtuned.conf
   systemctl restart ksmtuned || true
 fi
 
-echo "==> 4/6 Servidor NFS para el clúster"
+echo "==> 4/6 NFS server for the cluster"
 mkdir -p /srv/nfs/k8s
 chmod 777 /srv/nfs/k8s
 if ! grep -q '/srv/nfs/k8s' /etc/exports; then
@@ -64,7 +64,7 @@ fi
 exportfs -ra
 systemctl enable --now nfs-server >/dev/null
 
-echo "==> 5/6 Habilitar snippets en el storage local (para cloud-init)"
+echo "==> 5/6 Enable snippets on local storage (for cloud-init)"
 pvesm set local --content iso,vztmpl,backup,snippets,import
 
 echo "==> 6/6 Tailscale"
@@ -72,11 +72,11 @@ if ! command -v tailscale >/dev/null; then
   curl -fsSL https://tailscale.com/install.sh | sh
 fi
 echo
-echo ">>> Abre en tu laptop la URL que aparece abajo e inicia sesión en Tailscale."
+echo ">>> Open the URL below on your laptop and sign in to Tailscale."
 tailscale up --advertise-routes=10.10.10.0/24 --accept-dns=false --hostname=pve-grupo1
 
 echo
-echo "==> Listo. Verificación:"
+echo "==> Done. Verification:"
 ip -br a | grep -E 'vmbr0|vmbr1'
 exportfs -v
 tailscale status | head -3
