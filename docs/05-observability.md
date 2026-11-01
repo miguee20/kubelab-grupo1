@@ -38,6 +38,15 @@ Nothing is configured by hand in the Grafana UI:
 - **Admin credentials:** `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD`, which Doppler syncs into `monitoring/grafana-secrets`.
 - **Instructor user:** `docente`, with the Viewer role and password `GRAFANA_VIEWER_PASSWORD` from Doppler. It is created by a PostSync Job ([`grafana-viewer.yaml`](../k8s/observability/grafana-viewer.yaml)).
 
+The Job sets the Viewer role and View permission on the provisioned `KubeLab` folder through the Grafana API. Argo CD runs PostSync hooks only when it syncs, so after changing the Job a sync is triggered once:
+
+```bash
+kubectl -n argocd patch application observability-config --type merge \
+  -p '{"operation":{"initiatedBy":{"username":"admin"},"sync":{"revision":"main"}}}'
+```
+
+![docente sees the KubeLab dashboard without the "Make editable" button](evidence/05-grafana-viewer-docente.png)
+
 ### Dashboard "KubeLab · Inventory platform" (OBS-04)
 
 | Panel | Query (summary) |
