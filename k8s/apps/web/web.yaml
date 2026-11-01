@@ -25,7 +25,7 @@ spec:
             matchLabels: {app: web}
       containers:
         - name: web
-          image: ghcr.io/miguee20/kubelab-web:58c2151
+          image: ghcr.io/miguee20/kubelab-web:03c1c59
           ports:
             - name: http
               containerPort: 8080
