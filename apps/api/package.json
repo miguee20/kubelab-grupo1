@@ -1,0 +1,19 @@
+{
+  "name": "kubelab-api",
+  "version": "1.0.0",
+  "description": "Grocery store inventory API (products CRUD, /health, /metrics)",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.16.0",
+    "prom-client": "^15.1.3"
+  }
+}
