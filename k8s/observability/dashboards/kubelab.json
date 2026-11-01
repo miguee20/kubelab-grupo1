@@ -145,7 +145,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_requests_total{job=\"kubernetes-pods\", namespace=\"inventory\", app=\"api\"}[1m]))"
+          "expr": "sum(rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[1m]))"
         }
       ],
       "fieldConfig": {
@@ -403,7 +403,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (route) (rate(http_requests_total{job=\"kubernetes-pods\", namespace=\"inventory\", app=\"api\"}[1m]))",
+          "expr": "sum by (route) (rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[1m]))",
           "legendFormat": "{{route}}"
         },
         {
@@ -412,7 +412,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_requests_total{job=\"kubernetes-pods\", namespace=\"inventory\", app=\"api\"}[1m]))",
+          "expr": "sum(rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[1m]))",
           "legendFormat": "total"
         }
       ],

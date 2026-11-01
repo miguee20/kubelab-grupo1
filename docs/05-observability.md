@@ -13,14 +13,14 @@
 
 ### What Prometheus scrapes
 
-Scrape interval is 60 s. The job list replaces the chart default and keeps only what OBS-01 and the dashboard use, so the TSDB stays small on a 6 GB / HDD host:
+Scrape interval is 60 s. The 10 default jobs of chart 29.x (`scrapeConfigs` map) are disabled. The `kubelab-*` jobs keep only what OBS-01 and the dashboard use, so the TSDB stays small on a 6 GB / HDD host:
 
 | Job | Source | Kept series |
 |---|---|---|
-| `kubernetes-nodes-cadvisor` | kubelet cAdvisor on every node | `container_cpu_usage_seconds_total`, `container_memory_working_set_bytes` (per pod) |
-| `kubernetes-service-endpoints` | Annotated Services: node-exporter (all 4 nodes) and kube-state-metrics | Node metrics and Kubernetes object state (Go runtime and histogram buckets dropped) |
-| `kubernetes-pods` | Pods with `prometheus.io/scrape: "true"`: the API `/metrics` | `http_requests_total`, request duration sum/count, Node.js heap, process CPU and memory |
-| `prometheus` | Prometheus itself | All |
+| `kubelab-cadvisor` | kubelet cAdvisor on every node | `container_cpu_usage_seconds_total`, `container_memory_working_set_bytes` (per pod) |
+| `kubelab-service-endpoints` | Annotated Services: node-exporter (all 4 nodes) and kube-state-metrics | Node metrics and Kubernetes object state (Go runtime and histogram buckets dropped) |
+| `kubelab-pods` | Pods with `prometheus.io/scrape: "true"`: the API `/metrics` | `http_requests_total`, request duration sum/count, Node.js heap, process CPU and memory |
+| `kubelab-prometheus` | Prometheus itself | All |
 
 API-server and kubelet histograms are not collected; they were the largest source of series and nothing uses them.
 

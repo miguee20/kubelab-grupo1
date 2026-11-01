@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://prometheus-community.github.io/helm-charts
     chart: prometheus
-    targetRevision: ">=25.0.0"
+    targetRevision: 29.40.3
     helm:
       valuesObject:
         alertmanager:
@@ -51,16 +51,27 @@ spec:
         # Lean scrape configuration (replaces the chart default list). Keeps exactly what OBS-01 and the
         # dashboard need: node-exporter + kube-state-metrics (annotated Services), per-pod CPU/memory from
         # cAdvisor, and annotated pods (the API /metrics). API-server and kubelet histograms are not collected.
-        # Newer charts also render a default `scrapeConfigs` map and add it to serverFiles, which duplicates
-        # job names. An empty list replaces that map, so only the jobs below are rendered.
-        scrapeConfigs: []
+        # Chart 29.x renders its own `scrapeConfigs` map (10 default jobs) in addition to serverFiles.
+        # All defaults are disabled; the lean jobs below use kubelab-* names so they can never collide.
+        scrapeConfigs:
+          prometheus: {enabled: false}
+          kubernetes-apiservers: {enabled: false}
+          kubernetes-api-servers: {enabled: false}
+          kubernetes-nodes: {enabled: false}
+          kubernetes-nodes-cadvisor: {enabled: false}
+          kubernetes-service-endpoints: {enabled: false}
+          kubernetes-service-endpoints-slow: {enabled: false}
+          kubernetes-services: {enabled: false}
+          kubernetes-pods: {enabled: false}
+          kubernetes-pods-slow: {enabled: false}
+          prometheus-pushgateway: {enabled: false}
         serverFiles:
           prometheus.yml:
             scrape_configs:
-              - job_name: prometheus
+              - job_name: kubelab-prometheus
                 static_configs:
                   - targets: [localhost:9090]
-              - job_name: kubernetes-nodes-cadvisor
+              - job_name: kubelab-cadvisor
                 scheme: https
                 metrics_path: /metrics/cadvisor
                 tls_config:
@@ -79,7 +90,7 @@ spec:
                   - source_labels: [container]
                     action: drop
                     regex: "|POD"
-              - job_name: kubernetes-service-endpoints
+              - job_name: kubelab-service-endpoints
                 kubernetes_sd_configs:
                   - role: endpoints
                 relabel_configs:
@@ -111,7 +122,7 @@ spec:
                   - source_labels: [__name__]
                     action: drop
                     regex: (go|promhttp|process)_.*|node_scrape_collector_.*|.*_bucket
-              - job_name: kubernetes-pods
+              - job_name: kubelab-pods
                 kubernetes_sd_configs:
                   - role: pod
                 relabel_configs:
