@@ -25,11 +25,11 @@ Dominio funcional: **inventario de una tienda de abarrotes** (entidad `productos
 
 | Nodo | Rol | IP | vCPU | RAM | Disco |
 |---|---|---|---|---|---|
-| pve | Hipervisor Proxmox | 10.10.10.1 | 4 | 6 GB | 1 TB HDD |
-| k3s-cp | Control plane | 10.10.10.11 | 2 | 1280 MB | 20 GB |
-| k3s-w1 | Worker | 10.10.10.12 | 2 | 1280 MB | 30 GB |
-| k3s-w2 | Worker | 10.10.10.13 | 2 | 1280 MB | 30 GB |
-| k3s-w3 | Worker | 10.10.10.14 | 2 | 1280 MB | 30 GB |
+| pve | Hipervisor Proxmox | 192.168.137.10 / 10.10.10.1 | 4 | 6 GB | 1 TB HDD |
+| k3s-cp | Control plane | 10.10.10.11 | 2 | 1024 MB | 20 GB |
+| k3s-w1 | Worker | 10.10.10.12 | 2 | 1152 MB | 30 GB |
+| k3s-w2 | Worker | 10.10.10.13 | 2 | 1152 MB | 30 GB |
+| k3s-w3 | Worker | 10.10.10.14 | 2 | 1152 MB | 30 GB |
 
 Pool de MetalLB: `10.10.10.200-10.10.10.210`. Traefik: `10.10.10.200`.
 
@@ -65,4 +65,4 @@ scripts/             Utilidades del equipo
 
 ## Reconstruir el entorno desde cero
 
-> Pendiente: ver `docs/`.
+1. [Proxmox y VMs](docs/01-proxmox.md)
