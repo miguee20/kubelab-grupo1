@@ -1,4 +1,4 @@
-# MetalLB in layer 2 mode (NET-01). FRR is disabled: plain L2 needs no BGP.
+# MetalLB in layer 2 mode (NET-01).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -12,11 +12,16 @@ spec:
     targetRevision: ">=0.14.0"
     helm:
       valuesObject:
+        # Plain L2 mode: no BGP, so neither FRR nor the frr-k8s daemon are deployed
+        frrk8s:
+          enabled: false
         controller:
-          resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 96Mi}}
+          resources: {requests: {cpu: 10m, memory: 48Mi}, limits: {memory: 160Mi}}
         speaker:
           frr: {enabled: false}
-          resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 96Mi}}
+          # speakers only on workers, where Traefik runs; the control plane stays free
+          tolerateMaster: false
+          resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 128Mi}}
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system
