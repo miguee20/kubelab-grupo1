@@ -42,6 +42,23 @@ patches:
         reposerver.parallelism.limit: "1"
         # Large Helm repository indexes (prometheus-community, grafana) take minutes to fetch and render here
         controller.repo.server.timeout.seconds: "300"
+  # ACC-03: local read-only account for the instructor (password set by scripts/proxmox/06-argocd-users.sh)
+  - patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: argocd-cm
+      data:
+        accounts.docente: login
+  - patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: argocd-rbac-cm
+      data:
+        policy.default: ""
+        policy.csv: |
+          g, docente, role:readonly
   - target: {kind: StatefulSet, name: argocd-application-controller}
     patch: |-
       - op: add

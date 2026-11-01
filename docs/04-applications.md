@@ -50,6 +50,7 @@ Doppler project "kubelab" / config "prd"
 | `DATABASE_URL` | API (built with Doppler references from the three values above) |
 | `DB_READONLY_USER`, `DB_READONLY_PASSWORD` | Read-only SQL user for the instructor |
 | `GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_VIEWER_PASSWORD` | Grafana |
+| `ARGOCD_ADMIN_PASSWORD`, `ARGOCD_VIEWER_PASSWORD` | Argo CD `admin` and read-only `docente` |
 | `GH_PAT` | CI pipeline: pushes the new image tag to `main` |
 
 ![Doppler project kubelab, config prd (values hidden)](evidence/04-doppler-secrets.png)
