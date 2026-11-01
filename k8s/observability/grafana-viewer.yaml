@@ -1,0 +1,46 @@
+# Read-only Grafana user for the instructor (ACC-03). Runs after every sync of this Application;
+# login and password come from Doppler (grafana-secrets). New users get the Viewer role
+# (grafana.ini users.auto_assign_org_role = Viewer).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grafana-viewer-user
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-user
+          image: curlimages/curl:8.11.1
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              G=http://grafana.monitoring.svc.cluster.local
+              until curl -sf "$G/api/health" >/dev/null; do echo "waiting for grafana"; sleep 5; done
+              BODY=$(printf '{"name":"Instructor","login":"%s","password":"%s"}' "$VIEWER_USER" "$VIEWER_PASSWORD")
+              CODE=$(curl -s -o /tmp/out -w '%{http_code}' -u "$ADMIN_USER:$ADMIN_PASSWORD" \
+                -H 'Content-Type: application/json' -X POST "$G/api/admin/users" -d "$BODY")
+              case "$CODE" in
+                200) echo "viewer user created" ;;
+                412|409) echo "viewer user already exists" ;;
+                *) echo "unexpected response $CODE"; cat /tmp/out; exit 1 ;;
+              esac
+          env:
+            - name: VIEWER_USER
+              valueFrom: {secretKeyRef: {name: grafana-secrets, key: DB_READONLY_USER}}
+            - name: VIEWER_PASSWORD
+              valueFrom: {secretKeyRef: {name: grafana-secrets, key: GRAFANA_VIEWER_PASSWORD}}
+            - name: ADMIN_USER
+              valueFrom: {secretKeyRef: {name: grafana-secrets, key: GRAFANA_ADMIN_USER}}
+            - name: ADMIN_PASSWORD
+              valueFrom: {secretKeyRef: {name: grafana-secrets, key: GRAFANA_ADMIN_PASSWORD}}
+          resources:
+            requests: {cpu: 5m, memory: 8Mi}
+            limits: {memory: 32Mi}
