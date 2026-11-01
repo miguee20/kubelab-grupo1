@@ -43,6 +43,24 @@ The script also deletes `argocd-initial-admin-secret`, so the random first passw
 
 ![docente sees every Application, but Sync is rejected with "permission denied"](evidence/03-argocd-readonly-docente.png)
 
+## Pinned versions
+
+Every Helm chart and the Argo CD manifest use an exact version, so the cluster renders the same objects on every rebuild. A new upstream release never reaches the cluster unless a commit changes the version.
+
+| Component | Version |
+|---|---|
+| k3s | v1.36.5+k3s1 |
+| Argo CD (`install.yaml`) | v3.5.6 |
+| MetalLB | 0.16.1 |
+| Traefik | 42.2.0 |
+| nfs-subdir-external-provisioner | 4.0.18 |
+| metrics-server | 3.14.0 |
+| Doppler Kubernetes Operator | 1.7.5 |
+| Prometheus | 29.40.3 |
+| Loki | 7.5.0 |
+| Promtail | 6.17.1 |
+| Grafana | 10.5.15 |
+
 ## Argo CD trimmed for 6 GB
 
 | Change | Saving |

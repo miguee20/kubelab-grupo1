@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: loki
-    targetRevision: ">=6.0.0"
+    targetRevision: 7.5.0
     helm:
       valuesObject:
         deploymentMode: SingleBinary
@@ -78,7 +78,7 @@ spec:
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: promtail
-    targetRevision: ">=6.0.0"
+    targetRevision: 6.17.1
     helm:
       valuesObject:
         config:
