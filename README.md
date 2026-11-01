@@ -69,3 +69,4 @@ scripts/             Proxmox provisioning and team utilities
 1. [Proxmox and VMs](docs/01-proxmox.md)
 2. [Kubernetes (k3s)](docs/02-k3s.md)
 3. [Argo CD and platform services](docs/03-argocd-platform.md)
+4. [Applications, secrets and CI/CD](docs/04-applications.md)
