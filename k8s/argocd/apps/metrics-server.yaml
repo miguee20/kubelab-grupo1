@@ -1,0 +1,27 @@
+# metrics-server (HA-04): CPU/memory metrics for the HorizontalPodAutoscalers and `kubectl top`.
+# k3s kubelets use self-signed certificates, hence --kubelet-insecure-tls.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/metrics-server
+    chart: metrics-server
+    targetRevision: ">=3.12.0"
+    helm:
+      valuesObject:
+        args:
+          - --kubelet-insecure-tls
+          - --kubelet-preferred-address-types=InternalIP
+          - --metric-resolution=30s
+        resources:
+          requests: {cpu: 20m, memory: 32Mi}
+          limits: {memory: 96Mi}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
