@@ -28,3 +28,12 @@ test('nginx proxies /api/ to the api Service and exposes /healthz', () => {
   assert.match(conf, /api\.inventory\.svc\.cluster\.local/);
   assert.match(conf, /location = \/healthz/);
 });
+
+test('index.html has the inventory summary and app.js fills it', () => {
+  const html = read('public/index.html');
+  const js = read('public/app.js');
+  for (const id of ['sum-products', 'sum-units', 'sum-value', 'sum-low']) {
+    assert.match(html, new RegExp(`id="${id}"`));
+    assert.match(js, new RegExp(`'${id}'`));
+  }
+});

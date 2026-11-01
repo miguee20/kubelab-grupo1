@@ -24,12 +24,24 @@ async function request(url, options = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+const LOW_STOCK = 5;
+
+// Totals shown above the table; low-stock rows are highlighted too
+function renderSummary(products) {
+  const units = products.reduce((n, p) => n + Number(p.stock), 0);
+  const value = products.reduce((n, p) => n + Number(p.price) * Number(p.stock), 0);
+  $('sum-products').textContent = products.length;
+  $('sum-units').textContent = units;
+  $('sum-value').textContent = `Q${value.toFixed(2)}`;
+  $('sum-low').textContent = products.filter((p) => Number(p.stock) <= LOW_STOCK).length;
+}
+
 async function load() {
   try {
     const products = await request(API);
     rows.innerHTML = products.length
       ? products.map((p) => `
-        <tr>
+        <tr${Number(p.stock) <= LOW_STOCK ? ' class="low"' : ''}>
           <td>${p.id}</td>
           <td>${escapeHtml(p.name)}</td>
           <td>${escapeHtml(p.category)}</td>
@@ -42,6 +54,7 @@ async function load() {
         </tr>`).join('')
       : '<tr><td colspan="6">No products yet</td></tr>';
     rows.dataset.products = JSON.stringify(products);
+    renderSummary(products);
   } catch (err) {
     rows.innerHTML = '<tr><td colspan="6">Could not reach the API</td></tr>';
     setStatus(err.message, true);
