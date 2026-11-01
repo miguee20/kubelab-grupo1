@@ -58,9 +58,13 @@ fi
 echo "==> 4/6 NFS server for the cluster"
 mkdir -p /srv/nfs/k8s
 chmod 777 /srv/nfs/k8s
+# async: the HDD acknowledges writes from the page cache instead of on every fsync.
+# Much faster for SQLite (Grafana), PostgreSQL, Prometheus and Loki on a single HDD; a host
+# power loss could lose the last seconds of writes, which is acceptable in this lab.
 if ! grep -q '/srv/nfs/k8s' /etc/exports; then
-  echo '/srv/nfs/k8s 10.10.10.0/24(rw,sync,no_subtree_check,no_root_squash)' >> /etc/exports
+  echo '/srv/nfs/k8s 10.10.10.0/24(rw,async,no_subtree_check,no_root_squash)' >> /etc/exports
 fi
+sed -i 's|/srv/nfs/k8s 10.10.10.0/24(rw,sync,|/srv/nfs/k8s 10.10.10.0/24(rw,async,|' /etc/exports
 exportfs -ra
 systemctl enable --now nfs-server >/dev/null
 
