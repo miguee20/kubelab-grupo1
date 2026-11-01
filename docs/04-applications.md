@@ -76,6 +76,19 @@ The same applies to GitHub: the repository secret `DOPPLER_TOKEN` (a second, rea
 5. Argo CD detects the commit and syncs. The Deployment rolls out with `RollingUpdate` (`maxUnavailable: 0`).
 6. A change only in `k8s/` is synced by Argo CD directly, without building images.
 
+Each pod also has a `preStop` pause of 8 seconds. When a pod is replaced, Traefik needs a moment to drop it from its endpoints; during that time the old pod keeps answering instead of returning `502 Bad Gateway`.
+
+### Example: web change deployed automatically
+
+PR #27 added the inventory summary cards to the web app. The whole path from merge to running pods took about 2 minutes, with no manual step:
+
+| Step | Evidence |
+|---|---|
+| PR checks: `web / test` passed, the deploy job is skipped on pull requests | ![PR checks](evidence/04-cd-pull-request-checks.png) |
+| Merge to `main`: `test` → `build-and-deploy` (48 s), image `kubelab-web:03c1c59`, commit `chore(web): deploy image 03c1c59 [skip ci]` | ![Workflow run](evidence/04-cd-workflow-run.png) |
+| Argo CD rolls out the new ReplicaSet with the new tag | ![Rollout](evidence/04-cd-argocd-rollout.png) |
+| New version live at app.grupo1.lab | ![New version](evidence/04-cd-new-version.png) |
+
 ### One-time step after the first pipeline run
 
 Images pushed to GHCR start as **private**. The cluster pulls them anonymously, so after the first run each package is made public once:
