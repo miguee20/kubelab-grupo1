@@ -38,10 +38,12 @@ after(() => server.close());
 
 const json = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
-test('GET /health returns ok', async () => {
+test('GET /health returns ok and the build version', async () => {
   const res = await fetch(`${base}/health`);
   assert.equal(res.status, 200);
-  assert.deepEqual(await res.json(), { status: 'ok' });
+  const body = await res.json();
+  assert.equal(body.status, 'ok');
+  assert.equal(body.version, process.env.APP_VERSION || 'dev');
 });
 
 test('products CRUD lifecycle', async () => {

@@ -44,8 +44,8 @@ function createApp(repo) {
     next();
   });
 
-  // Liveness: the process is up
-  app.get('/health', (req, res) => res.json({ status: 'ok' }));
+  // Liveness: the process is up; also reports the running build, so a deployment can be checked from outside
+  app.get('/health', (req, res) => res.json({ status: 'ok', version: process.env.APP_VERSION || 'dev' }));
 
   // Readiness: the database answers
   app.get('/ready', async (req, res) => {
