@@ -1,7 +1,7 @@
-# Uso de inteligencia artificial
+# AI usage
 
-| Herramienta | Propósito |
+| Tool | Purpose |
 |---|---|
-| Claude (Anthropic) | Diseño de la arquitectura para 6 GB de RAM, generación de manifiestos, código de la API y la web, pipelines y documentación. Todo el contenido fue revisado y probado por el equipo. |
+| Claude (Anthropic) | Architecture design for a 6 GB RAM host, Kubernetes manifests, API and web code, CI/CD pipelines and documentation. All generated content was reviewed and tested by the team. |
 
-Cada integrante revisó y puede explicar los archivos de su área (ver tabla de integrantes en el README).
+Every team member reviewed the files in their area and can explain them during the defense.
