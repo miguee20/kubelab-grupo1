@@ -66,3 +66,4 @@ scripts/             Utilidades del equipo
 ## Reconstruir el entorno desde cero
 
 1. [Proxmox y VMs](docs/01-proxmox.md)
+2. [Kubernetes (k3s)](docs/02-k3s.md)
