@@ -43,14 +43,16 @@ Nothing is configured by hand in the Grafana UI:
 | Panel | Query (summary) |
 |---|---|
 | API / Web replicas available | `kube_deployment_status_replicas_available` |
-| API requests per second | `rate(http_requests_total{app="api"}[1m])` |
+| API requests per second | `rate(http_requests_total{app="api"}[3m])` |
 | Ready nodes | `kube_node_status_condition{condition="Ready"}` |
-| CPU usage by pod | `rate(container_cpu_usage_seconds_total{namespace="inventory"}[2m])` |
+| CPU usage by pod | `rate(container_cpu_usage_seconds_total{namespace="inventory"}[3m])` |
 | Memory usage by pod | `container_memory_working_set_bytes{namespace="inventory"}` |
 | Active replicas vs HPA desired | kube-state-metrics deployment and HPA series |
 | API requests per second by route | `http_requests_total` by `route` |
 | Node CPU and memory usage | node-exporter |
 | Application logs | Loki `{namespace="inventory"}` |
+
+Every `rate()` uses a 3-minute window. With a 60 s scrape interval, a 1-minute window holds a single sample and `rate()` returns nothing.
 
 ## Autoscaling and high availability
 
