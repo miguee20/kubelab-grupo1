@@ -1,0 +1,18 @@
+# Unused range of the fixed internal network vmbr1 reserved for LoadBalancer services (INF-06).
+# Traefik gets 10.10.10.200.
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lab-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 10.10.10.200-10.10.10.210
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: lab-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools: [lab-pool]
