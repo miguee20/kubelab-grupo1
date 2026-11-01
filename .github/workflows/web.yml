@@ -1,0 +1,93 @@
+# CI/CD for the web app (CD-01): only runs when apps/web changes.
+# test -> build and push image tagged with the short commit hash -> update k8s/apps/web -> Argo CD syncs.
+name: web
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/web/**", ".github/workflows/web.yml"]
+  pull_request:
+    paths: ["apps/web/**", ".github/workflows/web.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/miguee20/kubelab-web
+  MANIFEST: k8s/apps/web/web.yaml
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: Validate nginx configuration
+        run: |
+          docker run --rm -v "$PWD/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+            --add-host kube-dns.kube-system.svc.cluster.local:127.0.0.1 \
+            nginxinc/nginx-unprivileged:1.27-alpine nginx -t
+
+  build-and-deploy:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # SEC-03: pipeline credentials come from Doppler (only DOPPLER_TOKEN lives in GitHub)
+      - name: Load secrets from Doppler
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          GH_PAT=$(curl -fsS -u "${DOPPLER_TOKEN}:" \
+            "https://api.doppler.com/v3/configs/config/secrets/download?format=json" | jq -r '.GH_PAT')
+          if [ -z "$GH_PAT" ] || [ "$GH_PAT" = "null" ]; then echo "GH_PAT not found in Doppler"; exit 1; fi
+          echo "::add-mask::$GH_PAT"
+          echo "GH_PAT=$GH_PAT" >> "$GITHUB_ENV"
+
+      - name: Short commit hash
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ env.IMAGE }}:${{ env.TAG }}
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/web
+          push: true
+          tags: ${{ env.IMAGE }}:${{ env.TAG }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Update image tag in the manifest
+        run: |
+          sed -i -E "s|(image: ${IMAGE}):[A-Za-z0-9._-]+|\1:${TAG}|" "$MANIFEST"
+          git diff --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git"
+          git commit -am "chore(web): deploy image ${TAG} [skip ci]" || { echo "nothing to commit"; exit 0; }
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
