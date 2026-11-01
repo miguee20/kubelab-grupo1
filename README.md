@@ -73,7 +73,7 @@ The cluster network `10.10.10.0/24` is reachable only through Tailscale. The Pro
 2. **Add the host names.** Append [`docs/hosts.txt`](docs/hosts.txt) to the hosts file:
    - Windows (Notepad as administrator): `C:\Windows\System32\drivers\etc\hosts`
    - Linux / macOS: `sudo tee -a /etc/hosts < docs/hosts.txt`
-3. **Check the connection.** `ping 10.10.10.200` should answer, and http://app.grupo1.lab should open.
+3. **Check the connection.** `ping 10.10.10.1` (the Proxmox host) should answer, and http://app.grupo1.lab should open. `10.10.10.200` does not answer ping: MetalLB announces it only for the Traefik ports (80 and 5432).
 
 ### Read-only accounts
 
