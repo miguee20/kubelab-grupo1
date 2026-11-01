@@ -90,3 +90,13 @@ The passwords are stored in Doppler and are delivered to the instructor privatel
 3. [Argo CD and platform services](docs/03-argocd-platform.md)
 4. [Applications, secrets and CI/CD](docs/04-applications.md)
 5. [Observability, autoscaling and load test](docs/05-observability.md)
+
+## Verifying the platform
+
+[`scripts/proxmox/verify-platform.sh`](scripts/proxmox/verify-platform.sh) checks every requirement against the running cluster (nodes, Argo CD, domains, HPA, PVCs, Prometheus targets, Loki, Doppler secrets) and prints PASS/FAIL per item. `--destructive` also deletes the web IngressRoute and `postgres-0` to prove self-healing and persistence.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/scripts/proxmox/verify-platform.sh -o verify.sh
+bash verify.sh                 # read-only
+bash verify.sh --destructive   # also self-healing and persistence
+```
