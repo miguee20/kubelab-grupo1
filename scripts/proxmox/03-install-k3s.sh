@@ -9,10 +9,10 @@ set -euo pipefail
 CP=10.10.10.11
 WORKERS=(10.10.10.12 10.10.10.13 10.10.10.14)
 SSH="ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5"
-CHANNEL=stable
+K3S_VERSION=v1.36.5+k3s1   # pinned: the same version on every rebuild
 
 echo "==> 1/4 k3s server on k3s-cp ($CP)"
-$SSH kube@$CP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_CHANNEL=$CHANNEL sh -s - server \
+$SSH kube@$CP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_VERSION=$K3S_VERSION sh -s - server \
   --node-ip $CP --tls-san $CP --tls-san k3s-cp.grupo1.lab \
   --write-kubeconfig-mode 644 \
   --disable traefik --disable servicelb --disable local-storage --disable metrics-server \
@@ -27,7 +27,7 @@ TOKEN=$($SSH kube@$CP "sudo cat /var/lib/rancher/k3s/server/node-token")
 echo "==> 2/4 k3s agents on the workers"
 for IP in "${WORKERS[@]}"; do
   echo "   -> $IP"
-  $SSH kube@$IP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_CHANNEL=$CHANNEL \
+  $SSH kube@$IP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_VERSION=$K3S_VERSION \
     K3S_URL=https://$CP:6443 K3S_TOKEN=$TOKEN sh -s - agent \
     --node-ip $IP \
     --kubelet-arg=system-reserved=memory=96Mi --kubelet-arg='eviction-hard=memory.available<64Mi'"
