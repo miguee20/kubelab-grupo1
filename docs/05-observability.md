@@ -13,12 +13,18 @@
 
 ### What Prometheus scrapes
 
-| Job | Source |
-|---|---|
-| `kubernetes-nodes`, `kubernetes-nodes-cadvisor` | kubelet and container metrics (CPU and memory per pod) |
-| `kubernetes-service-endpoints` | node-exporter and kube-state-metrics |
-| `kubernetes-pods` | Every pod with `prometheus.io/scrape: "true"`, including the API `/metrics` |
-| `kubernetes-apiservers` | Kubernetes API server |
+Scrape interval is 60 s. The job list replaces the chart default and keeps only what OBS-01 and the dashboard use, so the TSDB stays small on a 6 GB / HDD host:
+
+| Job | Source | Kept series |
+|---|---|---|
+| `kubernetes-nodes-cadvisor` | kubelet cAdvisor on every node | `container_cpu_usage_seconds_total`, `container_memory_working_set_bytes` (per pod) |
+| `kubernetes-service-endpoints` | Annotated Services: node-exporter (all 4 nodes) and kube-state-metrics | Node metrics and Kubernetes object state (Go runtime and histogram buckets dropped) |
+| `kubernetes-pods` | Pods with `prometheus.io/scrape: "true"`: the API `/metrics` | `http_requests_total`, request duration sum/count, Node.js heap, process CPU and memory |
+| `prometheus` | Prometheus itself | All |
+
+API-server and kubelet histograms are not collected; they were the largest source of series and nothing uses them.
+
+The Prometheus server has a startup probe that allows 10 minutes, because replaying the WAL from an HDD is slow. kube-state-metrics and metrics-server have lenient probes for the same reason.
 
 Targets can be checked at http://prometheus.grupo1.lab/targets.
 
