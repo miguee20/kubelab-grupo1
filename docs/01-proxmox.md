@@ -26,6 +26,16 @@
 
 Since the cluster lives on `vmbr1`, no internal IP changes when the laptop's internet connection changes.
 
+### Changing networks (home, university, defense day)
+
+Only the laptop's Wi-Fi changes. [`scripts/windows/enable-ics.ps1`](../scripts/windows/enable-ics.ps1) re-enables Internet Connection Sharing from Wi-Fi to Ethernet in one step and checks that `192.168.137.10` answers:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\windows\enable-ics.ps1
+```
+
+If the adapters have other names (`Wi-Fi 2`, `Ethernet 3`), the script lists them; pass them with `-Public` and `-Private`. Tailscale on the Proxmox host reconnects by itself once it has internet again.
+
 ## 1. Installing Proxmox VE 9.2
 
 1. Proxmox VE 9.2 ISO written to a USB drive with Rufus in **DD mode**.
