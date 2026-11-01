@@ -22,6 +22,8 @@ Business domain: **grocery store inventory** (`products` entity).
 - The cluster lives on `vmbr1`, so no internal IP changes when the uplink network changes.
 - External access through Tailscale (subnet router on the Proxmox host).
 
+Detailed diagrams (layout, request path, GitOps delivery and observability): [docs/architecture.md](docs/architecture.md).
+
 ## Node inventory
 
 | Node | Role | IP | vCPU | RAM | Disk |
