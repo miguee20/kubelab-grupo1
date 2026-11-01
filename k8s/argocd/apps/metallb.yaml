@@ -1,0 +1,49 @@
+# MetalLB in layer 2 mode (NET-01). FRR is disabled: plain L2 needs no BGP.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://metallb.github.io/metallb
+    chart: metallb
+    targetRevision: ">=0.14.0"
+    helm:
+      valuesObject:
+        controller:
+          resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 96Mi}}
+        speaker:
+          frr: {enabled: false}
+          resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 96Mi}}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers: [/spec/conversion/webhook/clientConfig/caBundle]
+---
+# IPAddressPool and L2Advertisement (needs the MetalLB CRDs; retries until they exist)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/miguee20/kubelab-grupo1.git
+    targetRevision: main
+    path: k8s/platform/metallb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [SkipDryRunOnMissingResource=true]
+    retry: {limit: 20, backoff: {duration: 15s, factor: 2, maxDuration: 3m}}

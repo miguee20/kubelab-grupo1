@@ -1,0 +1,18 @@
+# Argo CD manages its own installation from k8s/argocd/install
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/miguee20/kubelab-grupo1.git
+    targetRevision: main
+    path: k8s/argocd/install
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [ServerSideApply=true]
