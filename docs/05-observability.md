@@ -55,6 +55,18 @@ Nothing is configured by hand in the Grafana UI:
 
 Argo CD ignores `spec.replicas` of both Deployments (`ignoreDifferences` + `RespectIgnoreDifferences`). Without that, `selfHeal` would undo every scaling decision of the HPA.
 
+## Workload placement
+
+The scheduler places pods by their memory *requests*, not their real usage. At first it stacked Grafana, Prometheus, kube-state-metrics and metrics-server on the same worker. That node then stalled on I/O, and its probes started failing. The heavy, stateful pods now carry a **preferred** node affinity, so each worker gets one group. Because the affinity is only preferred, a pod still moves to another worker if its node goes down.
+
+| Worker | Heavy pods |
+|---|---|
+| k3s-w1 | prometheus-server, kube-state-metrics |
+| k3s-w2 | Argo CD application-controller and repo-server, PostgreSQL |
+| k3s-w3 | Loki, Grafana |
+
+Grafana and Prometheus use the `Recreate` strategy: their SQLite and TSDB files on the RWO volume must never be opened by two pods at once.
+
 ## Load test (HA-05)
 
 The script is [`tests/load/k6-api.js`](../tests/load/k6-api.js): 30 s of warm-up, then 4 minutes at 40 virtual users, then 1 minute of ramp-down.

@@ -43,6 +43,13 @@ spec:
           resources:
             requests: {cpu: 50m, memory: 128Mi}
             limits: {memory: 384Mi}
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  preference:
+                    matchExpressions:
+                      - {key: kubernetes.io/hostname, operator: In, values: [k3s-w3]}
         read: {replicas: 0}
         write: {replicas: 0}
         backend: {replicas: 0}

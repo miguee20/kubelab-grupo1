@@ -44,6 +44,14 @@ spec:
         secrets.doppler.com/reload: "true"
     spec:
       terminationGracePeriodSeconds: 30
+      # Heavy pods are spread across workers; PostgreSQL prefers k3s-w2
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - {key: kubernetes.io/hostname, operator: In, values: [k3s-w2]}
       containers:
         - name: postgres
           image: postgres:17-alpine
