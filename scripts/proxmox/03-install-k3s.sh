@@ -17,7 +17,10 @@ $SSH kube@$CP "curl -sfL https://get.k3s.io | sudo INSTALL_K3S_CHANNEL=$CHANNEL 
   --write-kubeconfig-mode 644 \
   --disable traefik --disable servicelb --disable local-storage --disable metrics-server \
   --node-taint node-role.kubernetes.io/control-plane=true:NoSchedule \
+  --disable-cloud-controller --disable-helm-controller --disable-network-policy \
   --kubelet-arg=system-reserved=memory=96Mi --kubelet-arg='eviction-hard=memory.available<64Mi'"
+# Go garbage collector returns memory sooner (lower peak RAM on the 1.5 GB control plane)
+$SSH kube@$CP "echo GOGC=50 | sudo tee -a /etc/systemd/system/k3s.service.env >/dev/null && sudo systemctl restart k3s"
 
 TOKEN=$($SSH kube@$CP "sudo cat /var/lib/rancher/k3s/server/node-token")
 

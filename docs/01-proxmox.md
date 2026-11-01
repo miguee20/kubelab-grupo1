@@ -69,7 +69,7 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 
 | VMID | Node | IP | vCPU | RAM | Disk |
 |---|---|---|---|---|---|
-| 101 | k3s-cp | 10.10.10.11 | 2 | 1024 MB | 20 GB |
+| 101 | k3s-cp | 10.10.10.11 | 2 | 1536 MB | 20 GB |
 | 102 | k3s-w1 | 10.10.10.12 | 2 | 1152 MB | 30 GB |
 | 103 | k3s-w2 | 10.10.10.13 | 2 | 1152 MB | 30 GB |
 | 104 | k3s-w3 | 10.10.10.14 | 2 | 1152 MB | 30 GB |
@@ -85,12 +85,14 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 [`04-memory-tuning.sh`](../scripts/proxmox/04-memory-tuning.sh) applies the following:
 - Adds zram swap on the host (compressed in RAM, used before the HDD swap).
 - Enables the virtio-balloon device on every VM. With free page reporting, memory the guests free is returned to the host.
+- Raises the control plane to 1536 MB. With 1024 MB the k3s server swapped heavily during the first Argo CD sync (I/O pressure above 90 %) and the API server restarted.
+- Disables unused k3s server controllers (cloud controller, Helm controller, network policy) and sets `GOGC=50`.
 
 ### Memory budget (6 GB)
 
 | Consumer | RAM |
 |---|---|
 | Proxmox host (pveproxy, pvedaemon, NFS, Tailscale) | ~1.3 GB |
-| VMs (fixed size) | 4.4 GB |
+| VMs (fixed size) | 4.9 GB |
 | KSM savings (identical pages across the 4 Debian VMs) | ~0.3–0.6 GB |
 | zram on the host and inside each VM | compressed swap in RAM, before the HDD |
