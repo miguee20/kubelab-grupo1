@@ -1,0 +1,98 @@
+# PostgreSQL as a StatefulSet (PER-03) with its volume on the default NFS StorageClass (PER-02).
+# Credentials come from the inventory-secrets Secret, synced from Doppler (SEC-02).
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-hl
+  namespace: inventory
+  labels: {app: postgres}
+spec:
+  clusterIP: None
+  selector: {app: postgres}
+  ports:
+    - name: postgres
+      port: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: inventory
+  labels: {app: postgres}
+spec:
+  selector: {app: postgres}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: inventory
+  labels: {app: postgres}
+spec:
+  serviceName: postgres-hl
+  replicas: 1
+  selector:
+    matchLabels: {app: postgres}
+  template:
+    metadata:
+      labels: {app: postgres}
+      annotations:
+        secrets.doppler.com/reload: "true"
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          # Small-memory tuning for a 1 GB worker
+          args:
+            - -c
+            - shared_buffers=32MB
+            - -c
+            - max_connections=40
+            - -c
+            - work_mem=2MB
+            - -c
+            - maintenance_work_mem=16MB
+            - -c
+            - effective_cache_size=96MB
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_USER}}
+            - name: POSTGRES_PASSWORD
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_PASSWORD}}
+            - name: POSTGRES_DB
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_NAME}}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: 500m, memory: 256Mi}
+          readinessProbe:
+            exec:
+              command: [sh, -c, 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: [sh, -c, 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 2Gi

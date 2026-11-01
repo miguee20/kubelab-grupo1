@@ -1,0 +1,86 @@
+# Automated schema initialization (APP-07): an Argo CD PostSync hook Job runs schema.sql
+# after every sync. The script is idempotent (IF NOT EXISTS / seed only when empty) and also
+# creates the read-only role for the instructor (ACC-03) with the password stored in Doppler.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-schema
+  namespace: inventory
+data:
+  schema.sql: |
+    CREATE TABLE IF NOT EXISTS products (
+      id          SERIAL PRIMARY KEY,
+      name        VARCHAR(80)   NOT NULL,
+      category    VARCHAR(40)   NOT NULL DEFAULT 'General',
+      price       NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0),
+      stock       INTEGER       NOT NULL DEFAULT 0 CHECK (stock >= 0),
+      created_at  TIMESTAMPTZ   NOT NULL DEFAULT now(),
+      updated_at  TIMESTAMPTZ   NOT NULL DEFAULT now()
+    );
+
+    INSERT INTO products (name, category, price, stock)
+    SELECT * FROM (VALUES
+      ('Rice 1 lb',            'Grains',     6.50, 40),
+      ('Black beans 1 lb',     'Grains',     8.00, 35),
+      ('Corn tortillas (10)',  'Bakery',     5.00, 25),
+      ('Whole milk 1 L',       'Dairy',     12.50, 18),
+      ('Eggs (dozen)',         'Dairy',     22.00, 12),
+      ('Coffee 1 lb',          'Beverages', 45.00, 10)
+    ) AS seed(name, category, price, stock)
+    WHERE NOT EXISTS (SELECT 1 FROM products);
+
+    -- Read-only role for the instructor
+    SELECT format('CREATE ROLE %I LOGIN', :'ro_user')
+    WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'ro_user') \gexec
+    ALTER ROLE :"ro_user" WITH LOGIN PASSWORD :'ro_pass';
+    GRANT CONNECT ON DATABASE :"dbname" TO :"ro_user";
+    GRANT USAGE ON SCHEMA public TO :"ro_user";
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO :"ro_user";
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO :"ro_user";
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-schema
+  namespace: inventory
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: schema
+          image: postgres:17-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h postgres; do echo "waiting for postgres"; sleep 3; done
+              psql -h postgres -v ON_ERROR_STOP=1 \
+                -v ro_user="$RO_USER" -v ro_pass="$RO_PASS" -v dbname="$PGDATABASE" \
+                -f /sql/schema.sql
+              echo "schema applied"
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_USER}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_PASSWORD}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_NAME}}
+            - name: RO_USER
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_READONLY_USER}}
+            - name: RO_PASS
+              valueFrom: {secretKeyRef: {name: inventory-secrets, key: DB_READONLY_PASSWORD}}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+          volumeMounts:
+            - name: sql
+              mountPath: /sql
+      volumes:
+        - name: sql
+          configMap:
+            name: postgres-schema

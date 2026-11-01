@@ -1,0 +1,66 @@
+# Business components, one Argo CD Application each (CD-03).
+# Deployment replicas are owned by the HorizontalPodAutoscalers, so Argo CD ignores them.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: database
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/miguee20/kubelab-grupo1.git
+    targetRevision: main
+    path: k8s/apps/database
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: inventory
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true]
+    retry: {limit: 20, backoff: {duration: 15s, factor: 2, maxDuration: 3m}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/miguee20/kubelab-grupo1.git
+    targetRevision: main
+    path: k8s/apps/api
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: inventory
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers: [/spec/replicas]
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, RespectIgnoreDifferences=true]
+    retry: {limit: 20, backoff: {duration: 15s, factor: 2, maxDuration: 3m}}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/miguee20/kubelab-grupo1.git
+    targetRevision: main
+    path: k8s/apps/web
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: inventory
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers: [/spec/replicas]
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, RespectIgnoreDifferences=true]
+    retry: {limit: 20, backoff: {duration: 15s, factor: 2, maxDuration: 3m}}

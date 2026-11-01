@@ -1,0 +1,9 @@
+{
+  "name": "kubelab-web",
+  "version": "1.0.0",
+  "description": "Grocery store inventory web app (static files served by nginx)",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

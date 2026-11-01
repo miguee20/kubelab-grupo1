@@ -1,0 +1,5 @@
+# Namespaces that receive Doppler-managed Secrets must exist before the operator syncs them
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: inventory

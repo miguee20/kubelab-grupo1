@@ -1,0 +1,14 @@
+# PostgreSQL reachable at db.grupo1.lab:5432 through Traefik's "postgres" entry point (NET-04).
+# Plain PostgreSQL has no TLS SNI, so the route matches any host on that dedicated port.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: postgres
+  namespace: inventory
+spec:
+  entryPoints: [postgres]
+  routes:
+    - match: HostSNI(`*`)
+      services:
+        - name: postgres
+          port: 5432
