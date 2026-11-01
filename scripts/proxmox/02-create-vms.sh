@@ -11,10 +11,10 @@ BRIDGE=vmbr1
 GW=10.10.10.1
 
 #        id   name     ip           RAM(MB)  disk
-NODES=( "101 k3s-cp 10.10.10.11 1536 20G"
-        "102 k3s-w1 10.10.10.12 1152 30G"
-        "103 k3s-w2 10.10.10.13 1152 30G"
-        "104 k3s-w3 10.10.10.14 1152 30G" )
+NODES=( "101 k3s-cp 10.10.10.11 1408 20G"
+        "102 k3s-w1 10.10.10.12 1408 30G"
+        "103 k3s-w2 10.10.10.13 1408 30G"
+        "104 k3s-w3 10.10.10.14 1408 30G" )
 
 echo "==> 1/4 Host SSH key (to log into the nodes)"
 [ -f /root/.ssh/id_ed25519 ] || ssh-keygen -q -t ed25519 -N "" -f /root/.ssh/id_ed25519

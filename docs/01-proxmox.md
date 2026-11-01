@@ -69,10 +69,10 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 
 | VMID | Node | IP | vCPU | RAM | Disk |
 |---|---|---|---|---|---|
-| 101 | k3s-cp | 10.10.10.11 | 2 | 1536 MB | 20 GB |
-| 102 | k3s-w1 | 10.10.10.12 | 2 | 1152 MB | 30 GB |
-| 103 | k3s-w2 | 10.10.10.13 | 2 | 1152 MB | 30 GB |
-| 104 | k3s-w3 | 10.10.10.14 | 2 | 1152 MB | 30 GB |
+| 101 | k3s-cp | 10.10.10.11 | 2 | 1408 MB | 20 GB |
+| 102 | k3s-w1 | 10.10.10.12 | 2 | 1408 MB | 30 GB |
+| 103 | k3s-w2 | 10.10.10.13 | 2 | 1408 MB | 30 GB |
+| 104 | k3s-w3 | 10.10.10.14 | 2 | 1408 MB | 30 GB |
 
 ![Proxmox with the 4 cluster VMs running](evidence/01-proxmox-vms.png)
 
@@ -87,12 +87,13 @@ curl -fsSL https://raw.githubusercontent.com/miguee20/kubelab-grupo1/main/script
 - Enables the virtio-balloon device on every VM. With free page reporting, memory the guests free is returned to the host.
 - Raises the control plane to 1536 MB. With 1024 MB the k3s server swapped heavily during the first Argo CD sync (I/O pressure above 90 %) and the API server restarted.
 - Disables unused k3s server controllers (cloud controller, Helm controller, network policy) and sets `GOGC=50`.
+- Gives every node 1408 MB. With 1152 MB the workers ran out of page cache once the observability stack was running. The guest kernels then kept evicting and re-reading binaries and container layers from the HDD: about 15 MB/s of random reads, 30 % I/O delay, and nodes that stopped answering SSH. The host CPU was 70 % idle and its memory pressure was 0. So the host now overcommits about 1 GB, covered by KSM (about 450 MB) and host zram. That turns HDD reads into cheap in-RAM compression.
 
 ### Memory budget (6 GB)
 
 | Consumer | RAM |
 |---|---|
 | Proxmox host (pveproxy, pvedaemon, NFS, Tailscale) | ~1.3 GB |
-| VMs (fixed size) | 4.9 GB |
-| KSM savings (identical pages across the 4 Debian VMs) | ~0.3–0.6 GB |
+| VMs (1408 MB × 4) | 5.5 GB, about 1 GB overcommitted |
+| KSM savings (identical pages across the 4 Debian VMs) | ~0.45 GB measured |
 | zram on the host and inside each VM | compressed swap in RAM, before the HDD |
