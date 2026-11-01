@@ -91,6 +91,10 @@ spec:
                     action: drop
                     regex: "|POD"
               - job_name: kubelab-service-endpoints
+                # kube-state-metrics exports its own namespace/pod labels (e.g. namespace="inventory").
+                # Without honor_labels the target label namespace="monitoring" would win and rename
+                # them to exported_namespace, so the dashboard filters would match nothing.
+                honor_labels: true
                 kubernetes_sd_configs:
                   - role: endpoints
                 relabel_configs:

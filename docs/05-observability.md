@@ -22,6 +22,8 @@ Scrape interval is 60 s. The 10 default jobs of chart 29.x (`scrapeConfigs` map)
 | `kubelab-pods` | Pods with `prometheus.io/scrape: "true"`: the API `/metrics` | `http_requests_total`, request duration sum/count, Node.js heap, process CPU and memory |
 | `kubelab-prometheus` | Prometheus itself | All |
 
+`kubelab-service-endpoints` uses `honor_labels: true`. kube-state-metrics reports the namespace of each object (`namespace="inventory"`), and that label must not be replaced by the namespace of the kube-state-metrics Service itself (`monitoring`).
+
 API-server and kubelet histograms are not collected; they were the largest source of series and nothing uses them.
 
 The Prometheus server has a startup probe that allows 10 minutes, because replaying the WAL from an HDD is slow. kube-state-metrics and metrics-server have lenient probes for the same reason.
