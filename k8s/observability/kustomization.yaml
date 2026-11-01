@@ -1,0 +1,16 @@
+# Grafana dashboards (versioned JSON), IngressRoutes for Grafana and Prometheus,
+# and the Job that creates the instructor's read-only Grafana user.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+resources:
+  - routes.yaml
+  - grafana-viewer.yaml
+
+configMapGenerator:
+  - name: grafana-dashboards
+    files:
+      - dashboards/kubelab.json
+    options:
+      disableNameSuffixHash: true

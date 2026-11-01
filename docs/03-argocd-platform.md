@@ -54,3 +54,7 @@ kubectl -n traefik get svc traefik          # EXTERNAL-IP 10.10.10.200
 kubectl get storageclass                    # nfs (default)
 kubectl top nodes                           # metrics-server working
 ```
+
+![Argo CD with every platform Application Synced and Healthy](evidence/03-argocd-platform-apps.png)
+
+![Tailscale subnet route 10.10.10.0/24 approved for pve-grupo1, key expiry disabled](evidence/03-tailscale-subnet-route.png)
