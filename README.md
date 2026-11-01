@@ -46,6 +46,7 @@ k8s/argocd/          Argo CD Applications (app of apps)
 .github/workflows/   CI/CD pipelines
 docs/                VM creation, cluster install, diagrams, hosts.txt, evidence
 scripts/             Proxmox provisioning and team utilities
+tests/load/          k6 load test for the autoscaling demo
 ```
 
 ## Service URLs
@@ -70,3 +71,4 @@ scripts/             Proxmox provisioning and team utilities
 2. [Kubernetes (k3s)](docs/02-k3s.md)
 3. [Argo CD and platform services](docs/03-argocd-platform.md)
 4. [Applications, secrets and CI/CD](docs/04-applications.md)
+5. [Observability, autoscaling and load test](docs/05-observability.md)

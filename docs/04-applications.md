@@ -8,6 +8,10 @@
 | Web (static HTML/JS on nginx) | [`apps/web`](../apps/web) | Deployment + Service + IngressRoute + HPA + PDB | http://app.grupo1.lab |
 | PostgreSQL 17 | — | StatefulSet + NFS PVC + schema Job + IngressRouteTCP | db.grupo1.lab:5432 |
 
+![Web app at app.grupo1.lab](evidence/04-web-app.png)
+
+![Read-only connection to db.grupo1.lab:5432 from DBeaver](evidence/04-dbeaver-readonly.png)
+
 All of them live in the `inventory` namespace. Each one is its own Argo CD Application: `api`, `web` and `database`.
 
 ### API endpoints (APP-01)
@@ -47,6 +51,8 @@ Doppler project "kubelab" / config "prd"
 | `DB_READONLY_USER`, `DB_READONLY_PASSWORD` | Read-only SQL user for the instructor |
 | `GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_VIEWER_PASSWORD` | Grafana |
 | `GH_PAT` | CI pipeline: pushes the new image tag to `main` |
+
+![Doppler project kubelab, config prd (values hidden)](evidence/04-doppler-secrets.png)
 
 ### The only manual secret (SEC-04)
 
