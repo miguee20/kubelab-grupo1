@@ -51,6 +51,9 @@ spec:
         # Lean scrape configuration (replaces the chart default list). Keeps exactly what OBS-01 and the
         # dashboard need: node-exporter + kube-state-metrics (annotated Services), per-pod CPU/memory from
         # cAdvisor, and annotated pods (the API /metrics). API-server and kubelet histograms are not collected.
+        # Newer charts also render a default `scrapeConfigs` map and add it to serverFiles, which duplicates
+        # job names. An empty list replaces that map, so only the jobs below are rendered.
+        scrapeConfigs: []
         serverFiles:
           prometheus.yml:
             scrape_configs:
