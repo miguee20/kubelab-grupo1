@@ -145,7 +145,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[1m]))"
+          "expr": "sum(rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[3m]))"
         }
       ],
       "fieldConfig": {
@@ -256,7 +256,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"inventory\", container!=\"\", container!=\"POD\"}[2m]))",
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"inventory\", container!=\"\", container!=\"POD\"}[3m]))",
           "legendFormat": "{{pod}}"
         }
       ],
@@ -403,7 +403,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (route) (rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[1m]))",
+          "expr": "sum by (route) (rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[3m]))",
           "legendFormat": "{{route}}"
         },
         {
@@ -412,7 +412,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[1m]))",
+          "expr": "sum(rate(http_requests_total{namespace=\"inventory\", app=\"api\"}[3m]))",
           "legendFormat": "total"
         }
       ],
@@ -458,7 +458,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[2m])))",
+          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[3m])))",
           "legendFormat": "{{instance}}"
         }
       ],
