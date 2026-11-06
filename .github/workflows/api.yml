@@ -75,6 +75,7 @@ jobs:
           context: apps/api
           push: true
           tags: ${{ env.IMAGE }}:${{ env.TAG }}
+          build-args: APP_VERSION=${{ env.TAG }}
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
