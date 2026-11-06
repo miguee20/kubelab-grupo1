@@ -26,7 +26,7 @@ bash /root/kubelab-grupo1/scripts/proxmox/05-bootstrap-argocd.sh
 
 [`05-bootstrap-argocd.sh`](../scripts/proxmox/05-bootstrap-argocd.sh) installs Argo CD from [`k8s/argocd/install`](../k8s/argocd/install/kustomization.yaml) and creates the root Application. After that, nothing is applied by hand.
 
-Because the repository is private, the script first creates, from Doppler, the two Secrets that must exist before Argo CD can read it: the Doppler service token (`doppler-token-secret`) and the repository credentials (`argocd/argocd-repo`, labelled `argocd.argoproj.io/secret-type: repository`). Once the Doppler operator runs, the DopplerSecret `argocd-repo` keeps those credentials in sync with `GH_PAT`.
+So that Argo CD can also read the repository while it is private, the script first creates, from Doppler, the two Secrets that must exist before Argo CD can read it: the Doppler service token (`doppler-token-secret`) and the repository credentials (`argocd/argocd-repo`, labelled `argocd.argoproj.io/secret-type: repository`). Once the Doppler operator runs, the DopplerSecret `argocd-repo` keeps those credentials in sync with `GH_PAT`.
 
 ## Argo CD accounts (ACC-03)
 

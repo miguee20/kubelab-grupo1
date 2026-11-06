@@ -65,8 +65,6 @@ tests/load/          k6 load test for the autoscaling demo
 
 ## Instructor access
 
-The repository is private: the instructor is added as a collaborator.
-
 The cluster network `10.10.10.0/24` is reachable only through Tailscale. The Proxmox host `pve-grupo1` is a subnet router for it.
 
 1. **Join the tailnet.** Accept the Tailscale invitation sent by the group, install Tailscale and sign in. On Linux, also run `sudo tailscale up --accept-routes` (Windows and macOS accept routes by default).

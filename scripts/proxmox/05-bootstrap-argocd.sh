@@ -2,7 +2,8 @@
 # KubeLab - Step 5: bootstrap Argo CD (run ONCE in the pve shell as root, from the clone in /root/kubelab-grupo1).
 # This is the only manual kubectl apply in the project: it installs Argo CD and the root Application.
 # From then on Argo CD manages itself and every other component from Git.
-# The repository is private, so before the root Application this script creates, from Doppler:
+# Argo CD authenticates to the repository (required if it is private), so before the root Application
+# this script creates, from Doppler:
 #   - doppler-operator-system/doppler-token-secret: the Doppler service token (/root/.doppler-token, SEC-04)
 #   - argocd/argocd-repo: repository credentials; afterwards the DopplerSecret argocd-repo keeps it in sync
 set -euo pipefail
