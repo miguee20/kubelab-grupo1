@@ -51,14 +51,14 @@ Doppler project "kubelab" / config "prd"
 | `DB_READONLY_USER`, `DB_READONLY_PASSWORD` | Read-only SQL user for the instructor |
 | `GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_VIEWER_PASSWORD` | Grafana |
 | `ARGOCD_ADMIN_PASSWORD`, `ARGOCD_VIEWER_PASSWORD` | Argo CD `admin` and read-only `docente` |
-| `GH_PAT` | CI pipeline pushes the new image tag to `main`; Argo CD and the `pve` host read the private repository |
+| `GH_PAT` | CI pipeline pushes the new image tag to `main`; Argo CD and the `pve` host authenticate to the repository (needed only while it is private) |
 | `ARGOCD_REPO_URL`, `ARGOCD_REPO_USERNAME`, `ARGOCD_REPO_TYPE` | Argo CD repository Secret `argocd/argocd-repo` |
 
 ![Doppler project kubelab, config prd (values hidden)](evidence/04-doppler-secrets.png)
 
 ### The only manual secret (SEC-04)
 
-The Doppler service token cannot come from Doppler itself, so it is typed once by hand on the `pve` host, without echoing it or saving it in shell history ([docs/01, step 2](01-proxmox.md#2-repository-on-the-host)). It is kept in `/root/.doppler-token` (mode 600), and [`05-bootstrap-argocd.sh`](../scripts/proxmox/05-bootstrap-argocd.sh) turns it into `doppler-operator-system/doppler-token-secret`. Every other credential, including the GitHub token Argo CD and the host use to read the private repository, comes from Doppler.
+The Doppler service token cannot come from Doppler itself, so it is typed once by hand on the `pve` host, without echoing it or saving it in shell history ([docs/01, step 2](01-proxmox.md#2-repository-on-the-host)). It is kept in `/root/.doppler-token` (mode 600), and [`05-bootstrap-argocd.sh`](../scripts/proxmox/05-bootstrap-argocd.sh) turns it into `doppler-operator-system/doppler-token-secret`. Every other credential, including the GitHub token Argo CD and the host use to read the repository, comes from Doppler.
 
 The same applies to GitHub: the repository secret `DOPPLER_TOKEN` (a second, read-only service token) is the only credential stored in GitHub. No credential exists in the repository or its history.
 

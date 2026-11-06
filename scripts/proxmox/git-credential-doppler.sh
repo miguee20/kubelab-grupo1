@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Git credential helper for the private repository on the pve host.
+# Git credential helper for the repository on the pve host (required while it is private).
 # Reads GH_PAT from Doppler with the service token in /root/.doppler-token, so no GitHub
 # token is ever written to disk or to .git/config.
 #   git config credential.helper /root/kubelab-grupo1/scripts/proxmox/git-credential-doppler.sh

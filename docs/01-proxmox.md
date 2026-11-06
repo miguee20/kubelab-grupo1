@@ -49,7 +49,7 @@ If the adapters have other names (`Wi-Fi 2`, `Ethernet 3`), the script lists the
 
 ## 2. Repository on the host
 
-The repository is private. The `pve` host clones it with `GH_PAT`, which it reads from Doppler using the Doppler service token. That token is the only credential typed by hand (SEC-04); it is kept in `/root/.doppler-token` (mode 600, root only), and no GitHub token is written to disk.
+The repository is public, but the setup does not depend on that: it keeps working if the repository is made private. The `pve` host clones it with `GH_PAT`, which it reads from Doppler using the Doppler service token. That token is the only credential typed by hand (SEC-04); it is kept in `/root/.doppler-token` (mode 600, root only), and no GitHub token is written to disk.
 
 ```bash
 apt-get install -y -qq git
