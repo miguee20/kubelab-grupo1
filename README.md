@@ -56,7 +56,7 @@ tests/load/          k6 load test for the autoscaling demo
 | URL | Service | What you should see |
 |---|---|---|
 | http://app.grupo1.lab | Web application | Product inventory with create, edit and delete |
-| http://api.grupo1.lab/health | API | `{"status":"ok","version":"<sha7>"}` |
+| http://api.grupo1.lab/health | API | `{"status":"okas","version":"<sha7>"}` |
 | http://api.grupo1.lab/metrics | API | Metrics in Prometheus format |
 | db.grupo1.lab:5432 | PostgreSQL | Connection from an SQL client |
 | http://grafana.grupo1.lab | Grafana | KubeLab dashboard |

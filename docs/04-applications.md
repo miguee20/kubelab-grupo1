@@ -18,7 +18,7 @@ All of them live in the `inventory` namespace. Each one is its own Argo CD Appli
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/health` | Liveness: `{"status":"ok","version":"<sha7>"}` |
+| GET | `/health` | Liveness: `{"status":"okas","version":"<sha7>"}` |
 | GET | `/ready` | Readiness: checks the database connection |
 | GET | `/metrics` | Prometheus metrics (`http_requests_total`, `http_request_duration_seconds`, Node.js process metrics) |
 | GET | `/products` | List products |
